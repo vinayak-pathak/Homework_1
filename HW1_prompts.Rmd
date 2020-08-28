@@ -1,0 +1,114 @@
+---
+output:
+  html_document: default
+---
+# BME 590 Homework 1
+
+---
+
+*In this homework, the objectives are to*
+
+1. Create your first R Markdown document. Become comfortable working with dataframes in R using the “tidyverse” and “dplyr” packages and writing functions.
+
+2. Use R to calculate summary statistics and create basic plots of biomedical data.
+
+3. Run bash commands in RMardown to answer questions.
+
+**Assignments will only be accepted in electronic format in RMarkdown (.rmd) files and HTML files.** Commented versions of any code to produce analyses will be required. RMarkdown and html homework files should be uploaded to Sakai with the naming convention date_lastname_firstname_HW[X].Rmd. For example, Dr.Dunn’s first homework assignments would be named 20200911_Dunn_Jessilyn_HW1.Rmd and 20200911_Dunn_Jessilyn_HW1.html. It is important to note that **5 points** will be deducted for every assignment that is named improperly.
+
+---
+
+## Complete a Tutorial for "dplyr"
+
+1. Create a new R Markdown file named using the format *date_lastname_firstname_HW[X]*.
+  
+2. In the new RMD file, there are some example uses, which will be very helpful if you are unfamiliar with how to use it. Please refer to this [link](https://rmarkdown.rstudio.com/authoring_basics.html) for the basics and additional tips. This reference should be easy to read through, and is very helpful for you to make sure that your RMD file is clean and organized. Delete the example uses in the new RMD file, leaving only the title section.
+
+3. Follow this [introduction tutorial](https://dplyr.tidyverse.org/) for "tidyverse" and "dplyr" in your new RMD file created in part 1. We will learn more about these packages later in this class, but this is just an introduction to get you acquainted. For each command in this tutorial, insert a new R chunk by clicking on the **Insert** button at the top-right corner of the editor (Mac OS shortcut: Cmd + Option + I, Windows shortcut: Ctrl + Alt + I), run and understand what it's outputting. Additional tutorials and an introduction are in this [link](https://dplyr.tidyverse.org/articles/dplyr.html). You are encouraged to follow through this additional tutorial on your own and in a separate markdown file. 
+
+4. You can generate an HTML version of your HW RMD file by clicking on the **Knit** drop down menu and select HTML. Remember to generate it after you complete this HW.
+
+---
+
+**Note: For the following tasks, copy from this line of the RMD version to the end of HW1 prompts into your HW1 RMD file after your "dplyr" tutorial answers.**
+
+## Genome Dataset Summary and Plotting
+
+In this section we will be working with an exported excerpt from the data collected in the [1000 Genomes Project](https://www.internationalgenome.org/). The project collects and mains the world's largest, most detailed catalog of human genetic variation. The file titled *Chr20ex.csv* contains an excerpt exported in a friendly format to be easily read into R
+
+1. Read in the data file titled *Chr20ex.csv*. 
+
+2.	Use summary to show the summary statistics for the Chromosome 20 dataframe. Print the summary. How many rows are there in this dataframe?
+
+3.	How many of the data points “PASS” the quality test?
+
+4.	How many C->T SNPs exist in the data? (Hint- This is where the REF is a C and the ALT is a T)
+
+5.	Plot a histogram of A,C,T,G in Chromosome 20 dataframe using [ggplot2](https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html). You may have to install.packages(“ggplot2”) and read through the ggplot tutorial.
+
+---
+
+## Write a Function in R
+
+1. Download Heart Disease data set from UCI Machine Learning Repository using the following bash command. Bash chunk can be inserted by clicking on the drop-down menu beside the **Insert** at the top-left of the editor. **wget** is a bash tool that can be easily downloaded and installed on your computer. Depending on your operating system and package management preferences, you will have to install wget through different methods. Please search on Google on how to install wget.
+
+```{bash eval=FALSE}
+wget https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data
+```
+
+2. Import the file into R and label the column names properly. Note you can get some necessary information from the [archive](https://archive.ics.uci.edu/ml/datasets/Heart+Disease). Print the first few lines of the dataframe including your header row. How many rows and columns are there in this dataset?
+
+3. The last column of the data contains diagnosis information ranging from 0 to 4. The “0” label indicates that the subject is healthy, whereas the subjects with non-zero value in this field are positively diagnosed with heart disease. Using dplyr, add a new column named “diagnosed” that contains binary information about whether the subject has heart disease or not (e.g. true/false, 0/1, etc). Print the first few rows of your dataframe to confirm you have successfully created the new column.
+
+4. Write a function that takes in a dataframe and a column name of the dataframe and prints the summary statistics of values in that dataframe. You should follow this logic with potential improvements:
++ If the values are numeric, print that the values are numeric and then print the maximum value, minimum value, mean and median.
++ If the values are characters, categorical or logical, print the data type and then print the counts of each existing values.
++ You should also check that the column name provided by the user of this function is indeed a column of the dataframe provided by the user as well. Check this and output appropriate error message.
+
+Here is an example simple function that add two numbers (or vectors).
+```{r}
+add_two_numbers <- function(a,b) {
+  if (!is.numeric(a) || !is.numeric(b)) {
+    stop("Invalid input(s): inputs must all be atomic numerical values.")
+  }
+  
+  return(a+b)
+}
+add_two_numbers(c(1,2),2)
+```
+
+Your function here:
+```{r eval=FALSE}
+summarize_column <- function(df, column_name) {
+  if () {
+    stop()
+  }
+
+}
+```
+
+5. Test the function using the dataframe we have above, both when it works and it outputs an error messages. You can add the clause "error = TRUE" at the r chunk declaration so that your knitting is not stopped by this error. Test it on both the heart disease dataset as well as the Chromosome 20 dataset. 
+
+---
+
+## Shell Scripting 
+
+Working in R is sometimes limited by the amount of data that R can load and allow the user to efficiently work with. In R Studio coding environment, operations become very slow and sometimes fail to execute when a very large dataset is loaded. We can still answer some questions easily in R with bash commands on this kind of dataset though. And in this section we will explore how to run common bash commands to answer questions. You can run bash commands in either the command line tool/terminal or in bash chunks in R Markdown, but your commands must be in bash chunks in your RMD file for your homework submission.
+
+**Note:** Do not print or output a large number of lines (more than 10000 lines) in a bash chunk in R, since it will cause R to crash. If you want to print output that is very large, you can do this in command line tool/terminal.
+
+Here, we will work with a dataset that comes from this [Our World in Data](https://ourworldindata.org/coronavirus-source-data). It shows many metrics such as the new case count, the total death count and death count per million population from every region and country since the end of last year. 
+
+1. Look at the first 5 lines and last 5 lines of the data file owid-covid-data.csv.gz without unzipping it (This is not a very large dataset per se, but is used to simulate a working with a large dataset). Find out what "gzcat" does by running "man gzcat" and use "gzcat" to complete this task.
+
+2. How many lines are there in this file? Find out without unzipping the file.
+
+3. Unzip owid-covid-data.csv.gz without deleting the original zipped file. Use "man gunzip" to find out how to do that.
+
+4. Find out how many days of COVID-19 data *Italy* has in this dataset. Use "grep" to find the lines that contain the work "Italy" and count the lines.
+
+5. Look at "owid_covid_codebook.csv", which is a data dictionary for "owid_covid_data.csv". Each row is a COVID-19 case count entry. How many columns and how many rows are there in this dataset? Find out which column indicates the country from the codebook. Use bash command to determine how many unique countries have data in this file. I recommend using "awk" to parse the file.
+
+6. Use "awk" to filter by country "iso_code" so that we are only looking at COVID data from the USA. Find out the date that has the largest number of single day new cases in the USA using "sort".
+
+
