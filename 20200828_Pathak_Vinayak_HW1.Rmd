@@ -9,47 +9,28 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=TRUE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-```{r}
-2+2
-```
 ```{r}
 df <- read.csv2(file ="Chr20ex.csv", sep = "\t", header = FALSE)
 ```
 
 ```{r}
 summary(df)
-
 ```
+
 ```{r}
 head(df)
 ```
 
 ```{r}
-count(df)
+dim(df)
 ```
 
 So there are 500 rows in the dataframe, i.e. 500 records
 ```{r}
-df_pass <-df %>% filter(V7 == "PASS")
+df_pass <- df %>% filter(V7 == "PASS")
 ```
 
 ```{r}
@@ -59,7 +40,7 @@ head(df_pass)
 ```{r}
 count(df_pass)[1, ]
 ```
-Therefore total 500 records with
+Therefore total 500 records within the PASS Variable
 ```{r}
 df_c_t <- df %>% 
   filter(V4 == "C", V5 =='T')
@@ -72,8 +53,125 @@ There for total 116 records withh C->T SNPs in the Data
 ```{r}
 head(df_c_t)
 ```
+Extracting the correct rows as tibble and then plotting the graph
+Renaming the columns
+
+
+Plotting the chromossome histogram
+```{r}
+g <- ggplot(df, aes(class(V5)))
+
+```
+
 
 ```{r}
-head(df_c_t)
+g+geom_histogram()
 ```
+
+
+```{bash eval=FALSE}
+wget https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data
+```
+```{r}
+df_hd <-read.table(file = "processed.cleveland.data", header =TRUE, sep =",")
+```
+
+
+```{r}
+list_attrib <- c("age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach", "exang", "oldpeak", "slope", "ca", "thal", "num")
+```
+
+```{r}
+col_df = colnames(df_hd)
+```
+
+Renaming the columns of the dataframe
+
+```{r}
+#for(i in 2:length(col_df))
+
+names(df_hd) <- list_attrib
+
+```
+
+```{r}
+col_df_mod <-colnames(df_hd)
+col_df_mod
+```
+
+```{r}
+
+head(df_hd)
+```
+
+```{r}
+dim(df_hd)
+```
+
+Total number of rows and columns in the the data frame are 302 and 14; therefore there are toatal 302 records and 14 attributes for eac hof the record.
+```{r}
+df_hd <- mutate(df_hd, diagnosed = (num>0))
+```
+An example of the display...
+```{r}
+head(df_hd) %>%
+  select(age, sex, diagnosed)
+```
+```{r eval = FALSE}
+```
+
+Testing a general column
+```{r eval}
+summary(df_hd %>%
+          select(age))
+```
+```{r}
+temp <- df_hd %>%
+  select(age)
+```
+
+```{r eval=FALSE}
+summarize_column <- function(df, column_name) {
+  if (!column_name %in% names(df)) {
+    stop("Please enter the correct column name")
+  }
+
+
+}
+```
+```{r}
+df_temp <- df_hd %>%
+          select(age)
+```
+```{r}
+(df_temp)
+```
+Following is the function to be defined...
+```{r eval=FALSE}
+summarize_column <- function(dfn, column_name) {
+  if (!column_name %in% names(dfn)) {
+    stop(cat("The queried column name", column_name, "is not a valid dataframe attribute please enter the correct column name"))
+  }
+temp <- summary(dfn 
+        %>%select(column_name))
+
+print(temp)
+vectemp <- cat("The class of asked variable", column_name, "is", class(dfn[[column_name]]))
+}
+```
+```{r}
+summarize_column(df_hd, "age")
+
+```
+```{r}
+summarize_column(df_hd, "diagnosed")
+
+```
+```{r error=TRUE}
+summarize_column(df_hd, "random")
+
+```
+Test for the chr_20 database
+
+
 
