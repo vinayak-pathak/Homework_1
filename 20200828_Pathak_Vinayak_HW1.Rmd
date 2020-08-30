@@ -1,6 +1,6 @@
 ---
 title: "20200828_Pathak_Vinayak_HW1"
-author: "Vinayak Pathak"
+author: "Vinayak Pathak2"
 date: "8/28/2020"
 output: html_document
 ---
