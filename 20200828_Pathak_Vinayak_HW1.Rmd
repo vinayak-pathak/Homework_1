@@ -1,73 +1,97 @@
 ---
 title: "20200828_Pathak_Vinayak_HW1"
-author: "Vinayak Pathak2"
+author: "Vinayak Pathak"
 date: "8/28/2020"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
 ```
 
 
+#Section A
 
+1. Read in the data file titled *Chr20ex.csv*. 
 
 ```{r}
-df <- read.csv2(file ="Chr20ex.csv", sep = "\t", header = FALSE)
+df <- read.table(file = "Chr20ex.csv", header = FALSE)
+head(df)
 ```
-
+2.	Use summary to show the summary statistics for the Chromosome 20 dataframe. Print the summary. 
 ```{r}
 summary(df)
 ```
-
+How many rows are there in this dataframe? 
+Ans: There are 500 rows and hence 500 records in the database
 ```{r}
-head(df)
+dim(df)[1]
 ```
-
+3.	How many of the data points “PASS” the quality test?
 ```{r}
-dim(df)
-```
-
-So there are 500 rows in the dataframe, i.e. 500 records
-```{r}
-df_pass <- df %>% filter(V7 == "PASS")
-```
-
-```{r}
-head(df_pass)
-```
-
-```{r}
-count(df_pass)[1, ]
+df_pass <- df %>%
+  filter(V7 == "PASS")
+c<-count(df_pass)
+cat("The number of data points that pass the quality tests are",c[[1]])
 ```
 Therefore total 500 records within the PASS Variable
-```{r}
+
+4.	How many C->T SNPs exist in the data? (Hint- This is where the REF is a C and the ALT is a T)
+```{r error=FALSE}
 df_c_t <- df %>% 
   filter(V4 == "C", V5 =='T')
+cat("The number of C -> T SNPs in the dataset are",count(df_c_t)[1, ])
+
 ```
+There for total 116 records with C->T SNPs in the Data
+
+5.	Plot a histogram of A,C,T,G in Chromosome 20 dataframe using [ggplot2](https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html). You may have to install.packages(“ggplot2”) and read through the ggplot tutorial.
 
 ```{r}
-count(df_c_t)[1, ]
-```
-There for total 116 records withh C->T SNPs in the Data
-```{r}
 head(df_c_t)
+count(df_c_t)
 ```
 Extracting the correct rows as tibble and then plotting the graph
 Renaming the columns
 
 
-Plotting the chromossome histogram
+Plotting the chromosome histogram...
 ```{r}
-g <- ggplot(df, aes(class(V5)))
+count_bp = 0;
+counter = 1
+list_bases <-c("A", "T", "G","C")
+for (i in list_bases)
+{count_bp[counter]<- sum(as.numeric(as.logical(df$V5==i)));
+counter=counter+1
+}
 
 ```
 
 
 ```{r}
-g+geom_histogram()
+df_final <-as.data.frame(list_bases)
+df_final <-cbind(df_final, count_bp)
+
 ```
 
+```{r}
+g <- ggplot(df_final, aes(x=list_bases, y=count_bp))+geom_histogram(stat = "Identity")
+plot(g)
+#g <- ggplot(df_pass, aes(x = V5, y=as.numeric(as.logical(count_bp))))
+#g <- ggplot(df_pass, aes(y=as.numeric(as.logical(count_bp))))
+
+
+```
+
+
+
+
+
+
+#Section B
+1. Download Heart Disease data set from UCI Machine Learning Repository using the following bash command. Bash chunk can be inserted by clicking on the drop-down menu beside the **Insert** at the top-left of the editor. **wget** is a bash tool that can be easily downloaded and installed on your computer. Depending on your operating system and package management preferences, you will have to install wget through different methods. Please search on Google on how to install wget.
 
 ```{bash eval=FALSE}
 wget https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data
@@ -76,7 +100,7 @@ wget https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/pro
 df_hd <-read.table(file = "processed.cleveland.data", header =TRUE, sep =",")
 ```
 
-
+2. Import the file into R and label the column names properly. Note you can get some necessary information from the [archive](https://archive.ics.uci.edu/ml/datasets/Heart+Disease). Print the first few lines of the dataframe including your header row. How many rows and columns are there in this dataset?
 ```{r}
 list_attrib <- c("age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach", "exang", "oldpeak", "slope", "ca", "thal", "num")
 ```
@@ -108,46 +132,24 @@ head(df_hd)
 dim(df_hd)
 ```
 
-Total number of rows and columns in the the data frame are 302 and 14; therefore there are toatal 302 records and 14 attributes for eac hof the record.
+Total number of rows and columns in the the data frame are 302 and 14; therefore there are total 302 records and 14 attributes for each of the record.
+
+3. The last column of the data contains diagnosis information ranging from 0 to 4. The “0” label indicates that the subject is healthy, whereas the subjects with non-zero value in this field are positively diagnosed with heart disease. Using dplyr, add a new column named “diagnosed” that contains binary information about whether the subject has heart disease or not (e.g. true/false, 0/1, etc). Print the first few rows of your dataframe to confirm you have successfully created the new column.
 ```{r}
 df_hd <- mutate(df_hd, diagnosed = (num>0))
 ```
 An example of the display...
 ```{r}
 head(df_hd) %>%
-  select(age, sex, diagnosed)
+  select(age, sex, num, diagnosed)
 ```
-```{r eval = FALSE}
-```
+4. Write a function that takes in a dataframe and a column name of the dataframe and prints the summary statistics of values in that dataframe. You should follow this logic with potential improvements:
++ If the values are numeric, print that the values are numeric and then print the maximum value, minimum value, mean and median.
++ If the values are characters, categorical or logical, print the data type and then print the counts of each existing values.
++ You should also check that the column name provided by the user of this function is indeed a column of the dataframe provided by the user as well. Check this and output appropriate error message.
 
-Testing a general column
-```{r eval}
-summary(df_hd %>%
-          select(age))
-```
-```{r}
-temp <- df_hd %>%
-  select(age)
-```
-
-```{r eval=FALSE}
-summarize_column <- function(df, column_name) {
-  if (!column_name %in% names(df)) {
-    stop("Please enter the correct column name")
-  }
-
-
-}
-```
-```{r}
-df_temp <- df_hd %>%
-          select(age)
-```
-```{r}
-(df_temp)
-```
 Following is the function to be defined...
-```{r eval=FALSE}
+```{r}
 summarize_column <- function(dfn, column_name) {
   if (!column_name %in% names(dfn)) {
     stop(cat("The queried column name", column_name, "is not a valid dataframe attribute please enter the correct column name"))
@@ -156,7 +158,7 @@ temp <- summary(dfn
         %>%select(column_name))
 
 print(temp)
-vectemp <- cat("The class of asked variable", column_name, "is", class(dfn[[column_name]]))
+vectemp <- cat("The class of asked variable", column_name, "is", class(dfn[[column_name]]), "\n")
 }
 ```
 ```{r}
@@ -172,6 +174,88 @@ summarize_column(df_hd, "random")
 
 ```
 Test for the chr_20 database
+```{r}
+summarize_column(df, "V5")
+```
+```{r}
+summarize_column(df, "V1")
+```
+```{r error=TRUE}
+summarize_column(df, "random")
+```
 
 
+#Section C
+1. Look at the first 5 lines and last 5 lines of the data file owid-covid-data.csv.gz without unzipping it (This is not a very large dataset per se, but is used to simulate a working with a large dataset). Find out what "gzcat" does by running "man gzcat" and use "gzcat" to complete this task.
 
+
+Printing thhe first 5 lines without unzipping
+```{bash error =TRUE}
+gzcat owid-covid-data.csv.gz| head -n 5
+```
+Printing the last 5 lines of the files without unzipping
+```{bash}
+gzcat owid-covid-data.csv.gz| tail -n 5
+```
+
+2. How many lines are there in this file? Find out without unzipping the file.
+
+Printing the number of lines in the file:(Includes, the heading)
+```{bash}
+gzcat owid-covid-data.csv.gz| wc -l
+```
+
+3. Unzip owid-covid-data.csv.gz without deleting the original zipped file. Use "man gunzip" to find out how to do that.
+
+Unzipping the file owid-covid-data.csv.gz
+```{bash error=TRUE}
+gunzip owid-covid-data.csv.gz
+```
+4. Find out how many days of COVID-19 data *Italy* has in this dataset. Use "grep" to find the lines that contain the work "Italy" and count the lines.
+
+using grep to find the numbaer of occurences of the word *Italy and count those lines
+```{bash}
+grep Italy owid-covid-data.csv|wc -l
+```
+So there are 238 lines with occurrences of Italy
+
+5. Look at "owid_covid_codebook.csv", which is a data dictionary for "owid_covid_data.csv". Each row is a COVID-19 case count entry. How many columns and how many rows are there in this dataset? Find out which column indicates the country from the codebook. Use bash command to determine how many unique countries have data in this file. I recommend using "awk" to parse the file.
+
+Find out how many rows and columns in this file using awk
+```{bash}
+awk -F"," '{print NF}' owid-covid-data.csv | sort | uniq -c
+```
+There are 39272 rows(including heading) and 40 columns/attributes in the file.
+
+location i.e. column 3 or $3 indicates the country from the code book
+Reading into a data base to verify id the findings are correct
+```{r}
+#df_covid <- read.csv2(file = "owid-covid-data.csv", sep = ",")
+```
+Finding the number of unique countries that have their data in this data base
+```{bash}
+awk -F "," '$3!="location" {print $3}' owid-covid-data.csv|uniq|wc -l
+```
+Therefore there are 212 unique countries that have their data in this file.
+
+Finding out which column gives the output as total cases
+```{bash}
+awk 'BEGIN {FS = ",";counter = 1}; $1=="iso_code" {while($counter!="total_cases"){counter+=1}};END{ print counter}' owid-covid-data.csv|head -1
+```
+Fifth column is the column with total cases
+
+Finding out which column gives the output as single daily new_cases
+```{bash}
+awk 'BEGIN {FS = ",";counter = 1}; $1=="iso_code" {while($counter!="new_cases"){counter+=1}};END{ print counter}' owid-covid-data.csv|head -1
+```
+Therefore sixth column gives the single daily 'new_cases'
+6. Use "awk" to filter by country "iso_code" so that we are only looking at COVID data from the USA. Find out the date that has the largest number of single day new cases in the USA using "sort".
+```{bash}
+awk -F "," '$1=="USA" {print $5, $4}' owid-covid-data.csv|sort -n|tail -1
+```
+Therefore the date is 2020-08-24 when the total number of cases are maximum
+
+```{bash}
+awk -F "," '$1=="USA" {print $6, $4}' owid-covid-data.csv|sort -n|tail -1
+```
+Therefore the date is 2020-08-24 when the single daily number of cases are maximum
