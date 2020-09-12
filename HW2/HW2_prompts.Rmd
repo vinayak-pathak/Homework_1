@@ -1,7 +1,7 @@
 ---
-title: "YYYYMMDD_lastname_firstname_HW2"
+title: "20200918_Pathak_Vinayak_HW2"
 author: Your Name
-date: HW Completion Date
+date: 2020-09-12
 output: html_document
 ---
 
@@ -59,6 +59,9 @@ new_deaths_per_million
 positive_rate
 
 (5 points)
+```{bash}
+gunzip owid-covid-data.csv.gz
+```
 
 2. The **date** column in *covid_df* was automatically designated by R as a factor (which is a categorical variable designation) or a string (which is a character variable designation) and is therefore not understandable in R as a datetime object in its current form. Use the package **lubridate** to create a new vector named **Date** that contains the transformed **date** column structured as a POSIXct date-time object. Replace the  **date** column in the existing dataframe *covid_df* with the updated POSIXct date-time formatted **Date** column that you’ve just created(5 points)
 
