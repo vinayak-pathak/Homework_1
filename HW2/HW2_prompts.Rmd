@@ -60,12 +60,76 @@ positive_rate
 
 (5 points)
 ```{bash}
-gunzip owid-covid-data.csv.gz
+gunzip -k owid-covid-data.csv.gz
 ```
+Reading in the csv file as the dataframe
+```{r}
+df = read.csv(file = "owid-covid-data.csv")
+```
+Reading in the selected variables
+```{r}
+covid_df<- df %>%
+  select(iso_code,
+continent ,
+location, 
+date,
+population,
+total_cases,
+new_cases, 
+total_deaths,
+new_deaths,
+total_cases_per_million,
+new_cases_per_million,
+total_deaths_per_million,
+new_deaths_per_million, 
+positive_rate)
+```
+
 
 2. The **date** column in *covid_df* was automatically designated by R as a factor (which is a categorical variable designation) or a string (which is a character variable designation) and is therefore not understandable in R as a datetime object in its current form. Use the package **lubridate** to create a new vector named **Date** that contains the transformed **date** column structured as a POSIXct date-time object. Replace the  **date** column in the existing dataframe *covid_df* with the updated POSIXct date-time formatted **Date** column that you’ve just created(5 points)
 
-3. Use **ggplot2** to create a grid of marker+line plots containing 3 subplots in a 3 by 1 grid (3 rows by 1 column) to show the change in COVID-19 infection over time for the USA. The order of the three plots from the top to bottom of the grid should be  *new_cases_per_million*, *new_deaths_per_million* and *positivite_rate*. Clearly label your y-axes and x-axes with the names of the variables and their units. (You can refer to the codebook from last HW for details.) I recommend using the package "patchwork" for making multiple plots, but you can also use other packages for this purpose. (10 points)
+
+```{r}
+date_temp <- covid_df %>%
+  select(date)
+```
+
+```{r}
+for(temp in date_temp)
+  date<-ymd(temp)
+
+```
+```{r}
+covid_df["date"] = date
+```
+
+3. Use **ggplot2** to create a grid of marker+line plots containing 3 subplots in a 3 by 1 grid (3 rows by 1 column) to show the change in COVID-19 infection over time for the USA. The order of the three plots from the top to bottom of the grid should be  *new_cases_per_million*, *new_deaths_per_million* and *positive_rate*. Clearly label your y-axes and x-axes with the names of the variables and their units. (You can refer to the codebook from last HW for details.) I recommend using the package "patchwork" for making multiple plots, but you can also use other packages for this purpose. (10 points)
+
+```{r}
+covid_df_USA<-filter(covid_df, location=="United States")
+```
+```{r}
+p1<-ggplot(covid_df_USA, aes(x=date, y=new_cases_per_million))+geom_point(shape=3)+geom_line()
+```
+```{r}
+p2<-ggplot(covid_df_USA, aes(x=date, y=new_deaths_per_million))+geom_point(shape=3)+geom_line()
+```
+```{r}
+p3<-ggplot(covid_df_USA, aes(x=date, y=positive_rate))+geom_point(shape=3)+geom_line()
+```
+```{r}
+plot(p1)
+```
+```{r}
+plot(p2)
+```
+```{r}
+plot(p3)
+```
+```{r}
+p_final = p1/p2/p3
+plot(p_final)
+```
 
 4. What are the trends you observe for these three different measures? E.g. When do the highest values occur for each metric? Are these metrics decreasing or increasing at the latest recorded date? Clearly explain your answer for full mark. You can also comment on how these observations correspond with public health efforts (e.g. mask-wearing, physical distancing, and stay-at-home orders) . (5 points)
 
@@ -74,12 +138,48 @@ gunzip owid-covid-data.csv.gz
 ## Exploratory Data Analysis and Data Preprocessing
 
 1. From the same heart disease dataset in the file "heart_disease_df.csv", create a new dataframe named "heart_df" that contains information on the subjects' age, sex, resting blood pressure (trestbps), serum cholesterol level (chol), maximum heart rate (thalach), ST depression induced by exercise relative to rest (oldpeak) as well as the new column "diagnosed" in TRUE/FALSE. This is the dataset you worked with in the last HW, and information of this dataset (including all column names) is available at the website: https://archive.ics.uci.edu/ml/datasets/Heart+Disease. (6 points)
+```{r}
+heart_data <-read.csv(file="heart_disease_df.csv", header=TRUE)
+```
+```{r}
+heart_df <-heart_data %>% select(age, sex, trestbps, chol, thalach, oldpeak, diagnosed)
+```
 
 2. Cast all columns into the most sensible variable type, e.g., "age" should be an integer, "sex" should be a factor, and "diagnosed" should be a logical. (4 points)
+```{r}
+heart_df["age"]<-as.integer(heart_data[["age"]])
+
+```
+```{r}
+heart_df["sex"]<-factor(heart_data[["sex"]], levels=c("1", "0"), labels=c("M","F"))
+
+```
 
 3. Using ggplot and the grid drawing method of your choice, draw a 2-by-2 grid of 4 density histograms with the density curves overlaid on the same plot. Do this for **resting blood pressure**, **serum cholesterol level**, **maximum heart rate** and **ST depression induced by exercise relative to rest**.I recommend using the library "patchwork" or “gridExtra” for making the 4-plot grid. Label your axes and legend appropriately for full credit. You should also choose a suitable histogram bin width for each variable and explain why you made that choice. (10 points)
+```{r}
+t1 <- ggplot(heart_df, aes(x=trestbps))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Resting Blood Pressure(mm/Hg)", y="Density")
+```
+```{r}
+t2 <- ggplot(heart_df, aes(x=chol))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Cholestrol", y="Density")
+```
+```{r}
+t3 <- ggplot(heart_df, aes(x=thalach))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Maximum heart Rate", y="Density")
+```
+```{r}
+t4 <- ggplot(heart_df, aes(x=oldpeak))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.5, fill="white", color="brown")+geom_density()+labs(x="ST depression induced by exercise relative to rest", y="Density")
+```
+The above choice of binwidth allows the density curves to overlap appropriately over the histogram and show the the approprialte distribuition
+```{r}
+#add legends
+plot((t1|t2)/(t3|t4))
+```
+
 
 4. Now using a similar 2 by 2 grid, overlay two separate density curves for the diseased and healthy groups, for each variable (feature) from question 3.  For these figures, plot the just the density curve(without the density histogram bins). Add a vertical line for each of the two density curves on each plot at the mean value for that combined feature and diagnosis group. For example, in the first grid, which is row 1 and column 1 of the 2-by-2 grid, there should be two density plots drawn in two colors for the two different diagnosis groups (diagnosed = TRUE and diagnosed = FALSE). (20 points)
+
+```{r}
+mu1<-ddply(heart_df, "sex", summarise, s)
+```
 
 5. What are your observations? E.g. Does any feature visually show a strong difference in means or in shape of the data between the two diagnosis groups? For each feature, which diagnosis group seems to have a higher average value? Clearly explain your answer to receive full mark. (5 points)
 
