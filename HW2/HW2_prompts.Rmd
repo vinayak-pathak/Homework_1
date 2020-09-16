@@ -30,6 +30,8 @@ https://ourworldindata.org/coronavirus-source-data
 You have seen both datasets in the HW1. Please refer to these pages for additional information. Note that the coronavirus dataset is a newer version compared to the one we used in the HW1, so please use the newer version in this HW.
 
 ```{r message=FALSE}
+library(plyr)
+library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
@@ -109,23 +111,15 @@ covid_df["date"] = date
 covid_df_USA<-filter(covid_df, location=="United States")
 ```
 ```{r}
-p1<-ggplot(covid_df_USA, aes(x=date, y=new_cases_per_million))+geom_point(shape=3)+geom_line()
+p1<-ggplot(covid_df_USA, aes(x=date, y=new_cases_per_million))+geom_point(shape=1, size=0.1, alpha=0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("New cases per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
 ```
 ```{r}
-p2<-ggplot(covid_df_USA, aes(x=date, y=new_deaths_per_million))+geom_point(shape=3)+geom_line()
-```
+p2<-ggplot(covid_df_USA, aes(x=date, y=new_deaths_per_million))+geom_point(shape=1, size=0.1, alpha =0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("New deaths per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
+``` 
 ```{r}
-p3<-ggplot(covid_df_USA, aes(x=date, y=positive_rate))+geom_point(shape=3)+geom_line()
+p3<-ggplot(covid_df_USA, aes(x=date, y=positive_rate))+geom_point(shape=1,size=0.1, alpha =0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("Positive Rate")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
 ```
-```{r}
-plot(p1)
-```
-```{r}
-plot(p2)
-```
-```{r}
-plot(p3)
-```
+
 ```{r}
 p_final = p1/p2/p3
 plot(p_final)
@@ -133,6 +127,17 @@ plot(p_final)
 
 4. What are the trends you observe for these three different measures? E.g. When do the highest values occur for each metric? Are these metrics decreasing or increasing at the latest recorded date? Clearly explain your answer for full mark. You can also comment on how these observations correspond with public health efforts (e.g. mask-wearing, physical distancing, and stay-at-home orders) . (5 points)
 
+Answer-4:
+
+For the first graph i.e. new cases per million the first peak occurs at April end , it stayed almost constant for around two months till June end. At present the trends seem to be decreasing.  
+ 
+The constant new cases per million can be attributed to thh stay-home orders imposed by various states in the US by around May start. However to recover the economy, the stay-home orders were relaxed around Jun mid and we see an increasing trend until the new peak is established at arounnd July mid. Also initially the COVID-19 testing was not significant until Jun-mid and with the increase in testing more number of cases per million were reported. 
+For the second graph, we see that the New deaths per million achieved it's peak at around April mid, there is also another peak at arund Jun end. At present on an average of 2 weeks the New deaths per million is almost constant. As per the reported data in new,  most of the new deaths are present in the co-morbid patients.
+For the third graph, 
+As per the dataset CodeBook, positive rate refers to the  share of COVID-19 tests that are positive, given as a rolling 7-day average (this is the inverse of tests_per_case). 
+For the third graph, we see that out of those tested the maximum number of the people that reported positive are around the month of April mid. However it should be noted that at that time the testing facility was available only to those who complaint with the severe symptoms such as difficulty in breathing, and chest pain etc.along with fever/headache/cough/sore throat/chills/loss of taste etc. Since these symptomps are very specific to the COVID-19 patients it is highly likely that the patient complaining were COVID positive at that time. As the testing increased across the states and people adopted the communnity awareness guidelines we see that the positive rate decreased and share of number of patients that  were reported COVID negative increased
+Thus, the COVID-19 testing apart from the community awareness campaigns by states and various organisations such as CDC, w.r.t. following the physical distancing norms, and hygiene measures such as washing hands regularly and wearing masks have resulted in bringing not only the reported new cases per million down but also the new deaths per million and the observed positive rate.
+ 
 ---
 
 ## Exploratory Data Analysis and Data Preprocessing
@@ -151,26 +156,46 @@ heart_df["age"]<-as.integer(heart_data[["age"]])
 
 ```
 ```{r}
+heart_df["chol"]<-as.integer(heart_data[["chol"]])
+
+```
+```{r}
+heart_df["thalach"]<-as.integer(heart_data[["thalach"]])
+
+```
+```{r}
+heart_df["trestbps"]<-as.integer(heart_data[["trestbps"]])
+
+```
+```{r}
+heart_df["oldpeak"]<-as.numeric(heart_data[["oldpeak"]])
+
+```
+```{r}
 heart_df["sex"]<-factor(heart_data[["sex"]], levels=c("1", "0"), labels=c("M","F"))
+
+```
+```{r}
+heart_df["diagnosed"]<-as.logical(heart_data[["diagnosed"]])
 
 ```
 
 3. Using ggplot and the grid drawing method of your choice, draw a 2-by-2 grid of 4 density histograms with the density curves overlaid on the same plot. Do this for **resting blood pressure**, **serum cholesterol level**, **maximum heart rate** and **ST depression induced by exercise relative to rest**.I recommend using the library "patchwork" or “gridExtra” for making the 4-plot grid. Label your axes and legend appropriately for full credit. You should also choose a suitable histogram bin width for each variable and explain why you made that choice. (10 points)
 ```{r}
-t1 <- ggplot(heart_df, aes(x=trestbps))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Resting Blood Pressure(mm/Hg)", y="Density")
+t1 <- ggplot(heart_df, aes(x=trestbps))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Resting Blood Pressure(mm/Hg)", y="Density")+ theme(legend.position="right")
 ```
 ```{r}
-t2 <- ggplot(heart_df, aes(x=chol))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Cholestrol", y="Density")
+t2 <- ggplot(heart_df, aes(x=chol))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Cholestrol", y="Density")+ theme(legend.position="right")
 ```
 ```{r}
-t3 <- ggplot(heart_df, aes(x=thalach))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Maximum heart Rate", y="Density")
+t3 <- ggplot(heart_df, aes(x=thalach))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Maximum heart Rate", y="Density")+ theme(legend.position="right")
 ```
 ```{r}
-t4 <- ggplot(heart_df, aes(x=oldpeak))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.5, fill="white", color="brown")+geom_density()+labs(x="ST depression induced by exercise relative to rest", y="Density")
+t4 <- ggplot(heart_df, aes(x=oldpeak))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.2, fill="white", color="brown")+geom_density()+labs(x="ST depression induced by exercise relative to rest", y="Density")+ theme(legend.position="right")
 ```
-The above choice of binwidth allows the density curves to overlap appropriately over the histogram and show the the approprialte distribuition
+The above choice of binwidth allows the density curves to overlap appropriately over the histogram and show the appropriate distribuition
 ```{r}
-#add legends
+
 plot((t1|t2)/(t3|t4))
 ```
 
@@ -178,10 +203,38 @@ plot((t1|t2)/(t3|t4))
 4. Now using a similar 2 by 2 grid, overlay two separate density curves for the diseased and healthy groups, for each variable (feature) from question 3.  For these figures, plot the just the density curve(without the density histogram bins). Add a vertical line for each of the two density curves on each plot at the mean value for that combined feature and diagnosis group. For example, in the first grid, which is row 1 and column 1 of the 2-by-2 grid, there should be two density plots drawn in two colors for the two different diagnosis groups (diagnosed = TRUE and diagnosed = FALSE). (20 points)
 
 ```{r}
-mu1<-ddply(heart_df, "sex", summarise, s)
+
+mean1<-ddply(heart_df, "diagnosed", summarise, grp.mean = mean(trestbps))
+mean2<-ddply(heart_df, "diagnosed", summarise, grp.mean = mean(chol))
+mean3<-ddply(heart_df, "diagnosed", summarise, grp.mean = mean(thalach))
+mean4<-ddply(heart_df, "diagnosed", summarise, grp.mean = mean(oldpeak))
+```
+```{r}
+t11<-ggplot(heart_df, aes(x=trestbps, color=diagnosed)) +
+  geom_density()+geom_vline(data=mean1, aes(xintercept=grp.mean, color=diagnosed),linetype="dashed")+labs(x="Resting Blood Pressure(mm/Hg)", y="Density")
+t21<-ggplot(heart_df, aes(x=chol, color=diagnosed)) +
+  geom_density()+geom_vline(data=mean2, aes(xintercept=grp.mean, color=diagnosed),linetype="dashed")+labs(x="Cholestrol", y="Density")
+t31<-ggplot(heart_df, aes(x=thalach, color=diagnosed)) +
+  geom_density()+geom_vline(data=mean3, aes(xintercept=grp.mean, color=diagnosed),linetype="dashed")+labs(x="Maximum heart Rate", y="Density")
+t41<-ggplot(heart_df, aes(x=oldpeak, color=diagnosed)) +
+  geom_density()+geom_vline(data=mean4, aes(xintercept=grp.mean, color=diagnosed),linetype="dashed")+labs(x="ST depression induced by exercise relative to rest", y="Density")
+```
+
+#```{r}
+#pt11<-plot(t11)
+#pt21<-plot(t21)
+#pt31<-plot(t31)
+#pt41<-plot(t41)
+#```
+```{r}
+(pt11|pt21)/(pt31|pt41)
 ```
 
 5. What are your observations? E.g. Does any feature visually show a strong difference in means or in shape of the data between the two diagnosis groups? For each feature, which diagnosis group seems to have a higher average value? Clearly explain your answer to receive full mark. (5 points)
+
+
+
+
 
 6. By observing the histogram and density plots of all four predictors, answer the following questions for each of the predictors/variables:
 a. Is the dataset for each predictor/variable skewed?
@@ -190,9 +243,108 @@ c. Compute the skewness using the definition from the lecture.
 d. According to the criterion introduced in the lecture, is the dataset moderately skewed or highly skewed?
 (10 points)
 
-7. Correlation plots are a way to visualize multivariate relationships. Using the corrplot package, make a correlation plot of the fields in the dataframe **heart_df**. Clearly label your axis and legend for full marks. Which factor has the strongest correlation with the diagnosis status? (10 points)
+Answer 6,
+a. Yes, the data set for each predictor is skewed.
+b. The 'Resting Blood Pressure', 'Cholestrol' and 'ST depression induced by exercise relative to rest' are positively skewed while the 
+'Maximum Heart Rate' is negatively skewed.
+c. computing the skewness as defined in the lecture.
 
+
+
+```{r}
+a<-heart_df$trestbps
+b<-heart_df$chol
+c<-heart_df$thalach
+d<-heart_df$oldpeak
+mean_1<-mean(a)
+mean_2<-mean(b)
+mean_3<-mean(c)
+mean_4<-mean(d)
+
+n1<-length(a)
+n2<-length(b)
+n3<-length(c)
+n4<-length(d)
+
+m1<- (1/n1)*sum('^'((a-mean_1), 3))
+m2<- (1/n2)*sum('^'((b-mean_2), 3))
+m3<- (1/n3)*sum('^'((c-mean_3), 3))
+m4<- (1/n4)*sum('^'((d-mean_4), 3))
+
+s1<- '^'((1/(n1-1))*(sum('^'((a-mean_1), 2))), 1.5)
+s2<- '^'((1/(n2-1))*(sum('^'((b-mean_2), 2))), 1.5)
+s3<- '^'((1/(n3-1))*(sum('^'((c-mean_3), 2))), 1.5)
+s4<- '^'((1/(n4-1))*(sum('^'((d-mean_4), 2))), 1.5)
+
+b1<-m1/s1
+b2<-m2/s2
+b3<-m3/s3
+b4<-m4/s4
+
+```
+Answer d
+The values of skewness are: b1 =0.706, b2 = 1.120, b3 = -0.531, b4 = 1.269
+Resting Blood Pressure --- Positively Skewed, Moderately Skewed
+Cholestrol --- Positively Skewed, Highly Skewed
+Maximum Blood Pressure ---Negatively Skewed, Moderately Skewed
+ST depressionn induced by exercise relative to rest---Positively Skewed, Highly Skewed
+
+7. Correlation plots are a way to visualize multivariate relationships. Using the corrplot package, make a correlation plot of the fields in the dataframe **heart_df**. Clearly label your axis and legend for full marks. Which factor has the strongest correlation with the diagnosis status? (10 points)
+Answer 7: oldpeak("ST de)
+```{r}
+if(class(heart_data$sex)!='integer')
+heart_df$sex<-as.integer(as.logical(heart_df$sex=='M'))
+```
+
+```{r}
+library(corrplot)
+library(psych)
+M <-mixedCor(heart_df)
+corrplot(M$rho, method="number", type="lower", order="hclust")
+
+```
+```{r}
+#plot(heart_df$diagnosed, heart_df$oldpeak)
+```
 9. Perform winsorization on the **serum cholesterol level** dataset. Typically, you can decide a threshold (typically a specific range of percentiles) and replace all the data points outside of the threshold with the closest value from within the threshold. An example from Wikipedia may be a helpful demonstration: “a 90% winsorization would see all data below the 5th percentile set to the 5th percentile, and data above the 95th percentile set to the 95th percentile.” Conduct a 90% winsorization on the cholesterol level dataset and plot a histogram of the winsorized data. What is your observation? (5 points)
 
-10. Another method to normalize highly skewed data is to use log-scale transformation. Perform log-scale transformation on **ST depression induced by exercise relative to rest** dataset by adding 1 to each observation and taking a natural log. Plot the log-transformed histogram. What is your observation? (5 points)
+```{r}
 
+
+winsor <- function (x , fraction=.05) 
+{
+   if(length(fraction) != 1 || fraction < 0 ||
+         fraction > 0.5) {
+      stop("bad value for 'fraction'")
+   }
+   lim <- quantile(x, probs=c(fraction, 1-fraction))
+   x[ x < lim[1] ] <- lim[1]
+   x[ x > lim[2] ] <- lim[2]
+   return(x)
+}
+xinit=heart_df$chol
+xmod<-winsor(xinit, 0.05)
+
+```
+
+```{r}
+t3 <- ggplot(heart_df, aes(x=xinit))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="black")+geom_density(fill="#CC0099",  alpha=0.2)+labs(x="Cholestrol", y="Density")+xlim(0, 600)+ggtitle("Before Winsorisation")+theme(plot.title = element_text(hjust = 0.5))
+dfchol <-data.frame(xmod)
+t7 <- ggplot(dfchol, aes(x=xmod))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="black")+geom_density(fill="#9900CC",  alpha=0.3)+labs(x="Cholestrol", y="Density")+xlim(0, 600)+ggtitle("After Winsorisation")+theme(plot.title = element_text(hjust = 0.5))
+plot(t3/t7)
+
+```
+
+
+10. Another method to normalize highly skewed data is to use log-scale transformation. Perform log-scale transformation on **ST depression induced by exercise relative to rest** dataset by adding 1 to each observation and taking a natural log. Plot the log-transformed histogram. What is your observation? (5 points)
+```{r}
+dfchol["xinitlog"]<-data.frame(log(xinit+1))
+```
+```{r}
+plot5<-ggplot(dfchol, aes(x=xinit))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="brown")+labs(x="Cholestrol", y="Density")+geom_density(fill="#9900CC",  alpha=0.1)+ggtitle("Histogram before the log transformation")+theme(plot.title = element_text(hjust=0.5))
+
+plot6<-ggplot(dfchol, aes(x=xinitlog))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.1, fill="white", color="brown")+labs(x="Cholestrol", y="Density")+geom_density(fill="#9900CC",  alpha=0.05)+ggtitle("Histogram after the log transformation")+theme(plot.title = element_text(hjust=0.5))
+plot(plot5/plot6)
+
+```
+In the first case before logg transformation the data is positively skewed, whereas in the seconnd case the data almost centered arounnd a mean value, and not skewed.
