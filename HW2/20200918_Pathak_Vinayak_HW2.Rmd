@@ -99,7 +99,7 @@ class(covid_df[["date"]])
 ```{r}
 covid_df[["date"]][1]
 ```
-# ```{r}
+```{r}
 # date_temp <- covid_df %>%
 #   select(date)
 # ```
@@ -112,7 +112,7 @@ covid_df[["date"]][1]
 # ```{r}
 # covid_df["date"] = date
 # class(date)
-# ```
+ ```
 
 3. Use **ggplot2** to create a grid of marker+line plots containing 3 subplots in a 3 by 1 grid (3 rows by 1 column) to show the change in COVID-19 infection over time for the USA. The order of the three plots from the top to bottom of the grid should be  *new_cases_per_million*, *new_deaths_per_million* and *positive_rate*. Clearly label your y-axes and x-axes with the names of the variables and their units. (You can refer to the codebook from last HW for details.) I recommend using the package "patchwork" for making multiple plots, but you can also use other packages for this purpose. (10 points)
 
@@ -353,13 +353,16 @@ plot(t3/t7)
 
 10. Another method to normalize highly skewed data is to use log-scale transformation. Perform log-scale transformation on **ST depression induced by exercise relative to rest** dataset by adding 1 to each observation and taking a natural log. Plot the log-transformed histogram. What is your observation? (5 points)
 ```{r}
-dfchol["xinitlog"]<-data.frame(log(xinit+1))
+xinitoldpeak<-heart_df$oldpeak
+dfoldpeak<-data.frame(xinitoldpeak)
+dfoldpeak["xinitoldpeaklog"]<-data.frame(log(xinitoldpeak+1))
 ```
 ```{r}
-plot5<-ggplot(dfchol, aes(x=xinit))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="brown")+labs(x="Cholesterol(mg/dl)", y="Density")+geom_density(fill="#9900CC",  alpha=0.1)+ggtitle("Histogram before the log transformation")+theme(plot.title = element_text(hjust=0.5))
+plot5<-ggplot(dfoldpeak, aes(x=xinitoldpeak))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=1, fill="white", color="brown")+labs(x="ST depression induced by exercise relative to rest", y="Density")+geom_density(fill="#9900CC",  alpha=0.1)+ggtitle("Histogram before the log transformation")+theme(plot.title = element_text(hjust=0.5))
 
-plot6<-ggplot(dfchol, aes(x=xinitlog))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.1, fill="white", color="brown")+labs(x="Cholesterol(mg/dl)", y="Density")+geom_density(fill="#9900CC",  alpha=0.05)+ggtitle("Histogram after the log transformation")+theme(plot.title = element_text(hjust=0.5))
+plot6<-ggplot(dfoldpeak, aes(x=xinitoldpeaklog))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.1, fill="white", color="brown")+labs(x="ST depression induced by exercise relative to rest", y="Density")+geom_density(fill="#9900CC",  alpha=0.05)+ggtitle("Histogram after the log transformation")+theme(plot.title = element_text(hjust=0.5))
 plot(plot5/plot6)
 
 ```
-In the first case before logg transformation the data is positively skewed, whereas in the seconnd case the data almost centered around a mean value, and not skewed.
+
+In the first case before log transformation the data is positively skewed, whereas in the second case the data almost centered around a mean value, and not skewed(ignoring the value corresponding to zero because it occurs for very small values ~0 and log(1)=0).
