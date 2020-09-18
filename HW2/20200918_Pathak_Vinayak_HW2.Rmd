@@ -61,7 +61,7 @@ new_deaths_per_million
 positive_rate
 
 (5 points)
-```{bash}
+```{bash eval=FALSE}
 gunzip -k owid-covid-data.csv.gz
 ```
 Reading in the csv file as the dataframe
