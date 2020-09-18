@@ -1,6 +1,6 @@
 ---
 title: "20200918_Pathak_Vinayak_HW2"
-author: Your Name
+author: Vinayak Pathak
 date: 2020-09-12
 output: html_document
 ---
@@ -90,20 +90,29 @@ positive_rate)
 
 2. The **date** column in *covid_df* was automatically designated by R as a factor (which is a categorical variable designation) or a string (which is a character variable designation) and is therefore not understandable in R as a datetime object in its current form. Use the package **lubridate** to create a new vector named **Date** that contains the transformed **date** column structured as a POSIXct date-time object. Replace the  **date** column in the existing dataframe *covid_df* with the updated POSIXct date-time formatted **Date** column that you’ve just created(5 points)
 
-
 ```{r}
-date_temp <- covid_df %>%
-  select(date)
-```
-
-```{r}
-for(temp in date_temp)
-  date<-ymd(temp)
-
+covid_df[["date"]]<-as.POSIXct(ymd(covid_df[["date"]]), tz="")
 ```
 ```{r}
-covid_df["date"] = date
+class(covid_df[["date"]])
 ```
+```{r}
+covid_df[["date"]][1]
+```
+# ```{r}
+# date_temp <- covid_df %>%
+#   select(date)
+# ```
+# 
+# ```{r}
+# for(temp in date_temp)#Converting factor to date
+#   date<-as.POSIXct(ymd(temp))
+# 
+# ```
+# ```{r}
+# covid_df["date"] = date
+# class(date)
+# ```
 
 3. Use **ggplot2** to create a grid of marker+line plots containing 3 subplots in a 3 by 1 grid (3 rows by 1 column) to show the change in COVID-19 infection over time for the USA. The order of the three plots from the top to bottom of the grid should be  *new_cases_per_million*, *new_deaths_per_million* and *positive_rate*. Clearly label your y-axes and x-axes with the names of the variables and their units. (You can refer to the codebook from last HW for details.) I recommend using the package "patchwork" for making multiple plots, but you can also use other packages for this purpose. (10 points)
 
@@ -111,13 +120,13 @@ covid_df["date"] = date
 covid_df_USA<-filter(covid_df, location=="United States")
 ```
 ```{r}
-p1<-ggplot(covid_df_USA, aes(x=date, y=new_cases_per_million))+geom_point(shape=1, size=0.1, alpha=0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("New cases per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
+p1<-ggplot(covid_df_USA, aes(x=ymd(date), y=new_cases_per_million))+geom_point(shape=1, size=0.1, alpha=0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("New cases per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
 ```
 ```{r}
-p2<-ggplot(covid_df_USA, aes(x=date, y=new_deaths_per_million))+geom_point(shape=1, size=0.1, alpha =0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("New deaths per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
+p2<-ggplot(covid_df_USA, aes(x=ymd(date), y=new_deaths_per_million))+geom_point(shape=1, size=0.1, alpha =0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("New deaths per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
 ``` 
 ```{r}
-p3<-ggplot(covid_df_USA, aes(x=date, y=positive_rate))+geom_point(shape=1,size=0.1, alpha =0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("Positive Rate")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
+p3<-ggplot(covid_df_USA, aes(x=ymd(date), y=positive_rate))+geom_point(shape=1,size=0.1, alpha =0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("Positive Rate")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
 ```
 
 ```{r}
@@ -173,7 +182,7 @@ heart_df["oldpeak"]<-as.numeric(heart_data[["oldpeak"]])
 ```
 ```{r}
 heart_df["sex"]<-factor(heart_data[["sex"]], levels=c("1", "0"), labels=c("M","F"))
-
+#This is later on changed back to integer
 ```
 ```{r}
 heart_df["diagnosed"]<-as.logical(heart_data[["diagnosed"]])
@@ -185,13 +194,13 @@ heart_df["diagnosed"]<-as.logical(heart_data[["diagnosed"]])
 t1 <- ggplot(heart_df, aes(x=trestbps))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Resting Blood Pressure(mm/Hg)", y="Density")+ theme(legend.position="right")
 ```
 ```{r}
-t2 <- ggplot(heart_df, aes(x=chol))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Cholestrol", y="Density")+ theme(legend.position="right")
+t2 <- ggplot(heart_df, aes(x=chol))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Cholesterol(mg/dl)", y="Density")+ theme(legend.position="right")
 ```
 ```{r}
 t3 <- ggplot(heart_df, aes(x=thalach))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+geom_density()+labs(x="Maximum heart Rate", y="Density")+ theme(legend.position="right")
 ```
 ```{r}
-t4 <- ggplot(heart_df, aes(x=oldpeak))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.2, fill="white", color="brown")+geom_density()+labs(x="ST depression induced by exercise relative to rest", y="Density")+ theme(legend.position="right")
+t4 <- ggplot(heart_df, aes(x=oldpeak))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.2, fill="white", color="brown")+geom_density()+labs(x="ST deprs. induced by exercise rltv to rest", y="Density")+ theme(legend.position="right")
 ```
 The above choice of binwidth allows the density curves to overlap appropriately over the histogram and show the appropriate distribuition
 ```{r}
@@ -213,7 +222,7 @@ mean4<-ddply(heart_df, "diagnosed", summarise, grp.mean = mean(oldpeak))
 t11<-ggplot(heart_df, aes(x=trestbps, color=diagnosed)) +
   geom_density()+geom_vline(data=mean1, aes(xintercept=grp.mean, color=diagnosed),linetype="dashed")+labs(x="Resting Blood Pressure(mm/Hg)", y="Density")
 t21<-ggplot(heart_df, aes(x=chol, color=diagnosed)) +
-  geom_density()+geom_vline(data=mean2, aes(xintercept=grp.mean, color=diagnosed),linetype="dashed")+labs(x="Cholestrol", y="Density")
+  geom_density()+geom_vline(data=mean2, aes(xintercept=grp.mean, color=diagnosed),linetype="dashed")+labs(x="Cholesterol (mg/dl)", y="Density")
 t31<-ggplot(heart_df, aes(x=thalach, color=diagnosed)) +
   geom_density()+geom_vline(data=mean3, aes(xintercept=grp.mean, color=diagnosed),linetype="dashed")+labs(x="Maximum heart Rate", y="Density")
 t41<-ggplot(heart_df, aes(x=oldpeak, color=diagnosed)) +
@@ -227,12 +236,14 @@ t41<-ggplot(heart_df, aes(x=oldpeak, color=diagnosed)) +
 #pt41<-plot(t41)
 #```
 ```{r}
-(pt11|pt21)/(pt31|pt41)
+(t11|t21)/(t31|t41)
 ```
 
 5. What are your observations? E.g. Does any feature visually show a strong difference in means or in shape of the data between the two diagnosis groups? For each feature, which diagnosis group seems to have a higher average value? Clearly explain your answer to receive full mark. (5 points)
 
-
+Answer 5. The patients which are diagnosed TRUE i.e. have a heart disease, have higher mean value of Resting Blood Pressure, Cholestrol and the ST depression induced by the exercise relative to rest. Whereas, their maximum heart rate is lower than the healthy individuals.
+While the data for healthy and unhealthy individuals almost overlap in the case of Resting Blood Pressure and Cholesterol with Diseased/Unhealthy indivduals(with heart. disease) having slightly higher mean values. For the Maximum heart rate and ST depression induced by exercise relative to rest, comparing the shape of the data of the healthy with the unhealthy group,  it is significantly different.  In the case of Maximum heart rate unhealthy indivduals have a significantly lower mean value than the healthy individuals. Whereas the cholestrol in diseased individual has higher mean value when compared to the healthy individuals.
+Also commenting on the skewnewss, Resting blood pressure , cholestrol and ST depression... have positive skewnness whereas Maximum heart rate has negative skewness.
 
 
 
@@ -285,14 +296,15 @@ b4<-m4/s4
 Answer d
 The values of skewness are: b1 =0.706, b2 = 1.120, b3 = -0.531, b4 = 1.269
 Resting Blood Pressure --- Positively Skewed, Moderately Skewed
-Cholestrol --- Positively Skewed, Highly Skewed
+Cholesterol --- Positively Skewed, Highly Skewed
 Maximum Blood Pressure ---Negatively Skewed, Moderately Skewed
-ST depressionn induced by exercise relative to rest---Positively Skewed, Highly Skewed
+ST depression induced by exercise relative to rest---Positively Skewed, Highly Skewed
 
 7. Correlation plots are a way to visualize multivariate relationships. Using the corrplot package, make a correlation plot of the fields in the dataframe **heart_df**. Clearly label your axis and legend for full marks. Which factor has the strongest correlation with the diagnosis status? (10 points)
 Answer 7: oldpeak("ST de)
+
 ```{r}
-if(class(heart_data$sex)!='integer')
+if(class(heart_df$sex)!='integer')
 heart_df$sex<-as.integer(as.logical(heart_df$sex=='M'))
 ```
 
@@ -301,6 +313,8 @@ library(corrplot)
 library(psych)
 M <-mixedCor(heart_df)
 corrplot(M$rho, method="number", type="lower", order="hclust")
+#corrplot.mixed(M$rho, method="circle", type="upper", order="hclust")
+corrplot.mixed(M$rho, lower.col = "black", upper="circle",number.cex = .7, order="hclust", diag="l", tl.pos="lt")
 
 ```
 ```{r}
@@ -309,13 +323,14 @@ corrplot(M$rho, method="number", type="lower", order="hclust")
 9. Perform winsorization on the **serum cholesterol level** dataset. Typically, you can decide a threshold (typically a specific range of percentiles) and replace all the data points outside of the threshold with the closest value from within the threshold. An example from Wikipedia may be a helpful demonstration: “a 90% winsorization would see all data below the 5th percentile set to the 5th percentile, and data above the 95th percentile set to the 95th percentile.” Conduct a 90% winsorization on the cholesterol level dataset and plot a histogram of the winsorized data. What is your observation? (5 points)
 
 ```{r}
-
+#Defining the winsorisation percent
+winsorisation_percent =10
 
 winsor <- function (x , fraction=.05) 
-{
+{ fraction = winsorisation_percent*(0.5)*(1/100)
    if(length(fraction) != 1 || fraction < 0 ||
          fraction > 0.5) {
-      stop("bad value for 'fraction'")
+      stop("Please enter the value of winsorisation percent less than 100'")
    }
    lim <- quantile(x, probs=c(fraction, 1-fraction))
    x[ x < lim[1] ] <- lim[1]
@@ -323,14 +338,14 @@ winsor <- function (x , fraction=.05)
    return(x)
 }
 xinit=heart_df$chol
-xmod<-winsor(xinit, 0.05)
+xmod<-winsor(xinit, winsorisation_percent)
 
 ```
 
 ```{r}
-t3 <- ggplot(heart_df, aes(x=xinit))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="black")+geom_density(fill="#CC0099",  alpha=0.2)+labs(x="Cholestrol", y="Density")+xlim(0, 600)+ggtitle("Before Winsorisation")+theme(plot.title = element_text(hjust = 0.5))
+t3 <- ggplot(heart_df, aes(x=xinit))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="black")+geom_density(fill="#CC0099",  alpha=0.2)+labs(x="Cholesterol(mg/dl)", y="Density")+xlim(0, 600)+ggtitle("Before Winsorisation")+theme(plot.title = element_text(hjust = 0.5))
 dfchol <-data.frame(xmod)
-t7 <- ggplot(dfchol, aes(x=xmod))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="black")+geom_density(fill="#9900CC",  alpha=0.3)+labs(x="Cholestrol", y="Density")+xlim(0, 600)+ggtitle("After Winsorisation")+theme(plot.title = element_text(hjust = 0.5))
+t7 <- ggplot(dfchol, aes(x=xmod))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="black")+geom_density(fill="#9900CC",  alpha=0.3)+labs(x="Cholesterol(mg/dl)", y="Density")+xlim(0, 600)+ggtitle("After Winsorisation")+theme(plot.title = element_text(hjust = 0.5))
 plot(t3/t7)
 
 ```
@@ -341,10 +356,10 @@ plot(t3/t7)
 dfchol["xinitlog"]<-data.frame(log(xinit+1))
 ```
 ```{r}
-plot5<-ggplot(dfchol, aes(x=xinit))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="brown")+labs(x="Cholestrol", y="Density")+geom_density(fill="#9900CC",  alpha=0.1)+ggtitle("Histogram before the log transformation")+theme(plot.title = element_text(hjust=0.5))
+plot5<-ggplot(dfchol, aes(x=xinit))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=20, fill="white", color="brown")+labs(x="Cholesterol(mg/dl)", y="Density")+geom_density(fill="#9900CC",  alpha=0.1)+ggtitle("Histogram before the log transformation")+theme(plot.title = element_text(hjust=0.5))
 
-plot6<-ggplot(dfchol, aes(x=xinitlog))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.1, fill="white", color="brown")+labs(x="Cholestrol", y="Density")+geom_density(fill="#9900CC",  alpha=0.05)+ggtitle("Histogram after the log transformation")+theme(plot.title = element_text(hjust=0.5))
+plot6<-ggplot(dfchol, aes(x=xinitlog))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.1, fill="white", color="brown")+labs(x="Cholesterol(mg/dl)", y="Density")+geom_density(fill="#9900CC",  alpha=0.05)+ggtitle("Histogram after the log transformation")+theme(plot.title = element_text(hjust=0.5))
 plot(plot5/plot6)
 
 ```
-In the first case before logg transformation the data is positively skewed, whereas in the seconnd case the data almost centered arounnd a mean value, and not skewed.
+In the first case before logg transformation the data is positively skewed, whereas in the seconnd case the data almost centered around a mean value, and not skewed.
