@@ -91,13 +91,12 @@ positive_rate)
 2. The **date** column in *covid_df* was automatically designated by R as a factor (which is a categorical variable designation) or a string (which is a character variable designation) and is therefore not understandable in R as a datetime object in its current form. Use the package **lubridate** to create a new vector named **Date** that contains the transformed **date** column structured as a POSIXct date-time object. Replace the  **date** column in the existing dataframe *covid_df* with the updated POSIXct date-time formatted **Date** column that you’ve just created(5 points)
 
 ```{r}
-covid_df[["date"]]<-as.POSIXct(ymd(covid_df[["date"]]), tz="")
+Date<-as_date(covid_df[["date"]], tz="")
+covid_df[["date"]]<-as.POSIXct(Date, tz=NULL)
+
 ```
 ```{r}
 class(covid_df[["date"]])
-```
-```{r}
-covid_df[["date"]][1]
 ```
 ```{r}
 # date_temp <- covid_df %>%
@@ -120,13 +119,13 @@ covid_df[["date"]][1]
 covid_df_USA<-filter(covid_df, location=="United States")
 ```
 ```{r}
-p1<-ggplot(covid_df_USA, aes(x=ymd(date), y=new_cases_per_million))+geom_point(shape=1, size=0.1, alpha=0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("New cases per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
+p1<-ggplot(covid_df_USA, aes(x=ymd(date), y=new_cases_per_million))+geom_point(shape=2, size=0.4, alpha=0.5)+geom_line(color ="orange")+theme(axis.title.y = element_blank())+ggtitle("New cases per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
 ```
 ```{r}
-p2<-ggplot(covid_df_USA, aes(x=ymd(date), y=new_deaths_per_million))+geom_point(shape=1, size=0.1, alpha =0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("New deaths per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
+p2<-ggplot(covid_df_USA, aes(x=ymd(date), y=new_deaths_per_million))+geom_point(shape=2, size=0.4, alpha =0.5)+geom_line(color ="orange")+theme(axis.title.y = element_blank())+ggtitle("New deaths per million")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
 ``` 
 ```{r}
-p3<-ggplot(covid_df_USA, aes(x=ymd(date), y=positive_rate))+geom_point(shape=1,size=0.1, alpha =0.5)+geom_line(color ="red")+theme(axis.title.y = element_blank())+ggtitle("Positive Rate")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
+p3<-ggplot(covid_df_USA, aes(x=ymd(date), y=positive_rate))+geom_point(shape=2,size=0.4, alpha =0.5)+geom_line(color ="orange", alpha = 1)+theme(axis.title.y = element_blank())+ggtitle("Positive Rate")+theme(plot.title=element_text(hjust = 0.5))+scale_x_date(date_breaks = "1 month", date_labels = "%b")+xlab("Date(Month)")
 ```
 
 ```{r}
@@ -260,7 +259,11 @@ b. The 'Resting Blood Pressure', 'Cholestrol' and 'ST depression induced by exer
 'Maximum Heart Rate' is negatively skewed.
 c. computing the skewness as defined in the lecture.
 
-The values of skewness are: b1 =0.706, b2 = 1.120, b3 = -0.531, b4 = 1.269
+The values of skewness computed below are: b1 =0.706(trestbps), b2 = 1.120(chol), b3 = -0.531(thalach), b4 = 1.269(oldpeak)
+```{r}
+#library(e1071) 
+#skewness(heart_df$oldpeak) 
+```
 
 ```{r}
 a<-heart_df$trestbps
@@ -331,7 +334,7 @@ corrplot.mixed(M$rho, lower.col = "black", upper="circle",number.cex = .7, order
 #Defining the winsorisation percent
 winsorisation_percent =10
 
-winsor <- function (x , fraction=.05) 
+winsor <- function (x , winsorisation_percent) 
 { fraction = winsorisation_percent*(0.5)*(1/100)
    if(length(fraction) != 1 || fraction < 0 ||
          fraction > 0.5) {
@@ -354,7 +357,7 @@ t7 <- ggplot(dfchol, aes(x=xmod))+geom_histogram(aes(y=..density..), position="i
 plot(t3/t7)
 
 ```
-The tail on the right after the winsorisation moves towards the center, and this removes the out 
+The tail on the right after the winsorisation moves towards the center, and this removes effect of the outliers annd makes the data more mean centered.
 
 10. Another method to normalize highly skewed data is to use log-scale transformation. Perform log-scale transformation on **ST depression induced by exercise relative to rest** dataset by adding 1 to each observation and taking a natural log. Plot the log-transformed histogram. What is your observation? (5 points)
 ```{r}
@@ -370,16 +373,16 @@ plot(plot5/plot6)
 
 ```
 
-In the first case before log transformation the data is positively skewed.But it fails to achieve the normalisation around a mean centered value after the log transformation and is still skewed.  The bin at 0 shifts the density curve towards higher side on the left, which means there are lot of data close to zero in the oldpeak and log transformation after adding 1 makes it zero, (since log1=0). So the given dataset cannot be transformed into mean centered data using the log transformation. For having the mean centered the data should look like followinng as in case of the cholestrol level(not asked in the question, just giving for an example).
+Log transformationn also helps somewhat in reducing the effect of outliers. In the first case before log transformation, the data is positively skewed.After the log transformation it still fails to achieve the normalisation around a mean centered value and the data is still somewhat skewed.  The bin at 0 shifts the density curve towards higher side on the left, which means there are lot of data close to zero in the oldpeak and log transformation after adding 1 makes it zero, (since log1=0). So the given 'ST depression..' data cannot be transformed into mean centered data using the log transformation, although the effect of outliers is minimised. For having a mean centered the data should look like following as in the case of the cholestrol level(not asked in the question, just giving as an example).
 ```{r}
-xinitoldpeak<-heart_df$oldpeak
-dfoldpeak<-data.frame(xinitoldpeak)
-dfoldpeak["xinitoldpeaklog"]<-data.frame(log(xinitoldpeak+1))
+xinitchol<-heart_df$chol
+dfchol<-data.frame(xinitchol)
+dfchol["xinitchollog"]<-data.frame(log(xinitchol+1))
 ```
 ```{r}
-plot7<-ggplot(dfoldpeak, aes(x=xinitoldpeak))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=1, fill="white", color="brown")+labs(x="ST depression induced by exercise relative to rest", y="Density")+geom_density(fill="#9900CC",  alpha=0.1)+ggtitle("Histogram before the log transformation")+theme(plot.title = element_text(hjust=0.5))
+plot7<-ggplot(dfchol, aes(x=xinitchol))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=10, fill="white", color="brown")+labs(x="Cholestrol(mg/dl)", y="Density")+geom_density(fill="#9900CC",  alpha=0.1)+ggtitle("Histogram before the log transformation")+theme(plot.title = element_text(hjust=0.5))
 
-plot8<-ggplot(dfoldpeak, aes(x=xinitoldpeaklog))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.1, fill="white", color="brown")+labs(x="ST depression induced by exercise relative to rest", y="Density")+geom_density(fill="#9900CC",  alpha=0.05)+ggtitle("Histogram after the log transformation")+theme(plot.title = element_text(hjust=0.5))
-plot(plot5/plot6)
+plot8<-ggplot(dfchol, aes(x=xinitchollog))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.1, fill="white", color="brown")+labs(x="Cholestrol(mg/dl)", y="Density")+geom_density(fill="#9900CC",  alpha=0.05)+ggtitle("Histogram after the log transformation")+theme(plot.title = element_text(hjust=0.5))
+plot(plot7/plot8)
 
 ```
