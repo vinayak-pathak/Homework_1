@@ -260,7 +260,7 @@ b. The 'Resting Blood Pressure', 'Cholestrol' and 'ST depression induced by exer
 'Maximum Heart Rate' is negatively skewed.
 c. computing the skewness as defined in the lecture.
 
-
+The values of skewness are: b1 =0.706, b2 = 1.120, b3 = -0.531, b4 = 1.269
 
 ```{r}
 a<-heart_df$trestbps
@@ -294,14 +294,14 @@ b4<-m4/s4
 
 ```
 Answer d
-The values of skewness are: b1 =0.706, b2 = 1.120, b3 = -0.531, b4 = 1.269
+
 Resting Blood Pressure --- Positively Skewed, Moderately Skewed
 Cholesterol --- Positively Skewed, Highly Skewed
 Maximum Blood Pressure ---Negatively Skewed, Moderately Skewed
 ST depression induced by exercise relative to rest---Positively Skewed, Highly Skewed
 
 7. Correlation plots are a way to visualize multivariate relationships. Using the corrplot package, make a correlation plot of the fields in the dataframe **heart_df**. Clearly label your axis and legend for full marks. Which factor has the strongest correlation with the diagnosis status? (10 points)
-Answer 7: oldpeak("ST de)
+Answer 7: oldpeak has the strongest correlation with the diagnosis.(0.54)
 
 ```{r}
 if(class(heart_df$sex)!='integer')
@@ -312,8 +312,13 @@ heart_df$sex<-as.integer(as.logical(heart_df$sex=='M'))
 library(corrplot)
 library(psych)
 M <-mixedCor(heart_df)
+M2<-cor(heart_df)
 corrplot(M$rho, method="number", type="lower", order="hclust")
-#corrplot.mixed(M$rho, method="circle", type="upper", order="hclust")
+
+
+#Using just cor()
+corrplot.mixed(M2, lower.col = "black", upper="circle",number.cex = .7, order="hclust", diag="l", tl.pos="lt")
+#Using  Mixedcor()
 corrplot.mixed(M$rho, lower.col = "black", upper="circle",number.cex = .7, order="hclust", diag="l", tl.pos="lt")
 
 ```
@@ -349,7 +354,7 @@ t7 <- ggplot(dfchol, aes(x=xmod))+geom_histogram(aes(y=..density..), position="i
 plot(t3/t7)
 
 ```
-
+The tail on the right after the winsorisation moves towards the center, and this removes the out 
 
 10. Another method to normalize highly skewed data is to use log-scale transformation. Perform log-scale transformation on **ST depression induced by exercise relative to rest** dataset by adding 1 to each observation and taking a natural log. Plot the log-transformed histogram. What is your observation? (5 points)
 ```{r}
@@ -365,4 +370,16 @@ plot(plot5/plot6)
 
 ```
 
-In the first case before log transformation the data is positively skewed, whereas in the second case the data almost centered around a mean value, and not skewed(ignoring the value corresponding to zero because it occurs for very small values ~0 and log(1)=0).
+In the first case before log transformation the data is positively skewed.But it fails to achieve the normalisation around a mean centered value after the log transformation and is still skewed.  The bin at 0 shifts the density curve towards higher side on the left, which means there are lot of data close to zero in the oldpeak and log transformation after adding 1 makes it zero, (since log1=0). So the given dataset cannot be transformed into mean centered data using the log transformation. For having the mean centered the data should look like followinng as in case of the cholestrol level(not asked in the question, just giving for an example).
+```{r}
+xinitoldpeak<-heart_df$oldpeak
+dfoldpeak<-data.frame(xinitoldpeak)
+dfoldpeak["xinitoldpeaklog"]<-data.frame(log(xinitoldpeak+1))
+```
+```{r}
+plot7<-ggplot(dfoldpeak, aes(x=xinitoldpeak))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=1, fill="white", color="brown")+labs(x="ST depression induced by exercise relative to rest", y="Density")+geom_density(fill="#9900CC",  alpha=0.1)+ggtitle("Histogram before the log transformation")+theme(plot.title = element_text(hjust=0.5))
+
+plot8<-ggplot(dfoldpeak, aes(x=xinitoldpeaklog))+geom_histogram(aes(y=..density..), position="identity", alpha=0.5, binwidth=0.1, fill="white", color="brown")+labs(x="ST depression induced by exercise relative to rest", y="Density")+geom_density(fill="#9900CC",  alpha=0.05)+ggtitle("Histogram after the log transformation")+theme(plot.title = element_text(hjust=0.5))
+plot(plot5/plot6)
+
+```
