@@ -1,0 +1,94 @@
+---
+title: "YYYYMMDD_lastname_firstname_HW3"
+author: Your Name
+date: HW3 Completion Date
+output: html_document
+---
+
+# BME 590 Homework 3
+
+---
+
+*In this homework, the objectives are to*
+
+1. Use R to preprocess and examine a biomedical dataset
+
+2. Implement multiple unsupervised learning methods in a real-world biomedical problem, including: Principal Component Analysis, Hierarchical Clustering, and K-means Clustering in R
+
+3. Visualize and understand principal components, hierarchical clustering dendrograms, and the outputs of K-means clustering in R
+
+Assignments will only be accepted in electronic format in RMarkdown (.rmd) files and knitted .html files. You must submit both the RMD file and HTML file for each HW. **5 points will be deducted for every assignment submission that does not include either the RMarkdown file or the knitted html file.** Your code should be adequately commented to clearly explain the steps you used to produce the analyses. RMarkdown homework files should be uploaded to Sakai with the naming convention date_lastname_firstname_HW[X].Rmd. For example, my first homework assignment would be named 20200911_Dunn_Jessilyn_HW1.Rmd. **It is important to note that 5 points will be deducted for every assignment that is named improperly.** Please add your answer to each question directly after the question prompt in the homework .Rmd file template provided below.
+
+```{r message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(patchwork)
+library(gridExtra)
+library(psych)
+library(corrplot)
+library(ggfortify)
+library(factoextra)
+```
+
+## Dataset
+Breast Cancer Data
+https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)
+
+## Data Preparation
+1. Download the cancer data titled "HW3_data.csv" from Sakai and import it into R. Look at the first 10 lines of the data to learn about the dataset. The “diagnosis” field shows whether the patient was diagnosed with a benign or malignant tumor. Please read additional information about each column available in the file "HW3_data_info.html", which can also be downloaded from Sakai.
+
+2. Answer the following questions by using the summary function or other methods of your choice:
+
+a. How many observations are there?
+b. How many independent variables are there?
+c. Which variables have missing values and how many values were missing in each?
+d. How many observations are there with malignant diagnosis and how many are there with benign diagnosis?
+
+**For this question, please type your answers clearly outside of R chunks, and do not just show the result of running your codes.**
+
+3. There is one column with a very large number of missing observations. Which one is it? We are going to drop this column because it does not make sense to impute observations in this column- why not?. Briefly explain why we should not impute values in this column. Additionally, change the "id" column into the index column (i.e. turn the ID values into row names) and delete the "id" column. Use str() to display the resulting dataframe.
+
+4. After the previous step there are still 5 missing values from a column. Impute these missing values by the method of your choice. Keep in mind that imputation must be performed separately for the two different diagnoses (outcome variable) groups. Briefly explain why we should impute according to the different outcome groups.
+
+5. After imputation, use "ggplot" and "facet_wrap" to plot a grid of 10 x 3 histograms to explore the data shape and distribution of all the independent variables in this dataset. The dataset has 10 sets of independent variables not counting age, and each set consists of the mean, standard error and worst value of a particular cell measurement. "Area" and "concavity" are cell measurements. For example, "area_se" is the standard error of area measurements from a particular patient in this study. When you plot, remember to select a reasonable number of bins and add legends and labels when appropriate. Adjust the size of the plot display so that you can see all the facets clearly when you knit. 
+
+6. If you observe the independent variable distributions closely, groups of variables that start with "area" and "concavity" are consistently strongly skewed to the right. Apply log transform using the same formula we used in the last HW to these 6 variables. 
+
+7. The pre-processed dataset needs to be scaled before performing PCA. Can you give a brief explanation on why that is the case? Standardize the dataset. Use summary() again to show that your dataset has been properly standardized.
+
+## PCA
+
+8. Calculate principal components using function princomp() and print the summary of the results.
+
+9.  Plot a scree plot using the screeplot() function.
+
+10. Plot the following two plots and use patchwork/gridExtra to position the two plots side by side:
+a. proportion of variance explained over the number of principal components
+b. cumulative proportion of variance explained plot over the number of principal components; draw horizontal lines at 88% of variance and 95% variance.
+
+Note: please remember to clearly label your plots with titles, axis labels and legends when appropriate.
+
+11. What proportions of variance are captured from the first, second and third principal components? How many principal components do you need to describe at least 88% and 95% of the variance, respectively?
+
+12. Which are the top 3 variables that contribute the most to the variance captured from PC1, PC2 and PC3 respectively? (hint: look at the loadings information)
+
+14. Because of the relatively large number of variables in this dataset, it's very difficult to see the biplot clearly. Use the autoplot() function in package "ggfortify" to display a clearer biplot overlaid with a scatter plot for the first 2 principal components.
+
+15. Plot a grid of 3 x 2 scatter plots, where each plot is a scatter plot between two of the first 4 principal components, with different colors for each diagnosis group. For example, in grid cell (1,1), you should plot a scatter plot where the x-axis is PC1 and y-axis is PC2 where observations are colored according to the diagnosis group. Remember to adjust the plot display size so that you can see it clearly. Add legends and labels when appropriate. What are your observations?
+
+## Hierarchical Clustering
+
+17. Calculate a dissimilarity matrix using Euclidean distance and compute hierarchical clustering using the complete linkage method and plot the dendrogram. Use the rect.hclust() function to display dividing the dendrogram into 4 branches. 
+
+18. Divide the dendrogram into 4 clusters using cutree() function. Then use table() function and the diagnosis label information to compare the composition (benign vs. malignant) of each of the 4 clusters. How would you label each of these four clusters (e.g. cluster 1 is benign or malignant, cluster 2 is …, etc.)?
+
+19. Now try 6 clusters with and plot dendrograms for hierarchical clustering using Ward’s linkage. Use table() function to view the clustering result. How would you label each of these 6 clusters? Does this clustering work better or worse than the clustering result in the previous question? Give brief explanations.
+
+## K-Means Clustering
+
+20. Compute k-means clustering on this dataset using the kmeans() function for two clusters. Then use the table() function and the diagnosis label information to compare the composition (benign vs. malignant) of each of the 2 clusters (hint: the cluster information from k-means is stored in the $cluster attribute in the k-means result.)
+
+21. Visualize the clusters using the fiz_cluster() function from the factoextra package.
+
+22. Between the 3 clustering models we have tried in this homework, which one does the best? What's your observation?
