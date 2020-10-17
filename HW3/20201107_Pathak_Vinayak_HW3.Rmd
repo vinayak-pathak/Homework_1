@@ -1,0 +1,365 @@
+---
+title: "20201107_Pathak_Vinayak_HW3"
+author: Vinayak Pathak
+date: 2020-11-07
+output: html_document
+---
+
+# BME 590 Homework 3
+
+---
+
+*In this homework, the objectives are to*
+
+1. Use R to preprocess and examine a biomedical dataset
+
+2. Implement multiple unsupervised learning methods in a real-world biomedical problem, including: Principal Component Analysis, Hierarchical Clustering, and K-means Clustering in R
+
+3. Visualize and understand principal components, hierarchical clustering dendrograms, and the outputs of K-means clustering in R
+
+Assignments will only be accepted in electronic format in RMarkdown (.rmd) files and knitted .html files. You must submit both the RMD file and HTML file for each HW. **5 points will be deducted for every assignment submission that does not include either the RMarkdown file or the knitted html file.** Your code should be adequately commented to clearly explain the steps you used to produce the analyses. RMarkdown homework files should be uploaded to Sakai with the naming convention date_lastname_firstname_HW[X].Rmd. For example, my first homework assignment would be named 20200911_Dunn_Jessilyn_HW1.Rmd. **It is important to note that 5 points will be deducted for every assignment that is named improperly.** Please add your answer to each question directly after the question prompt in the homework .Rmd file template provided below.
+
+```{r message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(patchwork)
+library(gridExtra)
+library(psych)
+library(corrplot)
+library(ggfortify)
+library(factoextra)
+```
+
+## Dataset
+Breast Cancer Data
+https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)
+
+## Data Preparation
+1. Download the cancer data titled "HW3_data.csv" from Sakai and import it into R. Look at the first 10 lines of the data to learn about the dataset. The “diagnosis” field shows whether the patient was diagnosed with a benign or malignant tumor. Please read additional information about each column available in the file "HW3_data_info.html", which can also be downloaded from Sakai.
+```{r}
+data<-data.frame(read_csv(file = "HW3_data.csv"))
+```
+```{r}
+
+head(data, 10)
+```
+2. Answer the following questions by using the summary function or other methods of your choice:
+
+a. How many observations are there?
+```{r}
+nrow(data)
+```
+Answer a. There are 569 observation in the dataset.
+b. How many independent variables are there?
+```{r}
+
+total_independent_variables = length(names(data))-2 
+#Ignoring the ID
+print(total_independent_variables)
+```
+Answer b. Total Independent variable = 31 (Excluding the diagnosis and the patient id)
+c. Which variables have missing values and how many values were missing in each?
+
+```{r}
+var_name<-names(data)#Variable storing the variables in a data frame
+logic_missing=list()
+```
+```{r}
+for(i in var_name){
+  if(NA %in% data[[i]])
+    logic_missing<-append(logic_missing, i)
+}
+
+print(logic_missing)
+  
+```
+```{r}
+for(a in logic_missing)
+{ print(a)
+  print(sum(as.numeric(as.logical(is.na(data[a])))))
+}
+```
+
+
+Answer c. Hence the data is missing in texture_mean and age variable; there are 5 missing data in texture_mean and 542 missing data in age
+
+
+
+d. How many observations are there with malignant diagnosis and how many are there with benign diagnosis?
+```{r}
+summary(as.factor(data$diagnosis))
+```
+Answer d.There are total 357 Benign and 212 Malignant tumour, i.e. 357 and 212 patients with benign and malignant tumour respectively.
+**For this question, please type your answers clearly outside of R chunks, and do not just show the result of running your codes.**
+
+
+3. There is one column with a very large number of missing observations. Which one is it? We are going to drop this column because it does not make sense to impute observations in this column- why not?. Briefly explain why we should not impute values in this column. Additionally, change the "id" column into the index column (i.e. turn the ID values into row names) and delete the "id" column. Use str() to display the resulting dataframe.
+```{r}
+for(a in logic_missing)
+{ print(a)
+  print(sum(as.numeric(as.logical(is.na(data[a])))))
+}
+```
+
+
+Answer 3. Age variable has the largest number of NA values(542) i.e 95.4% if data is missing. We should not impute the this column because if we carry out complete 
+case analysis on this, then it will result in removing out lot of rows. If we do other kind of statistical imputationn such as mean imputation or otherwise, then we don't have enough number of data in the age column to get a distribution from which we can chose.
+```{r}
+data_modified<-mutate(data, age=NULL)#Removing the age column with large number of NA observations.
+```
+```{r}
+data_modified[["id"]]<-c(1:length(data$id))
+```
+```{r}
+data_modified<-data_modified %>% rename(Index = id)
+```
+```{r}
+str(data_modified)
+```
+
+
+
+4. After the previous step there are still 5 missing values from a column. Impute these missing values by the method of your choice. Keep in mind that imputation must be performed separately for the two different diagnoses (outcome variable) groups. Briefly explain why we should impute according to the different outcome groups.
+
+Answer 4. First let us change the diagnosis group into factor, so that we can utilise it well. Now I will be applying category wise(Benign/Malignant) mean imputation( at type of statistical imputation) to the missing values of the column 'texture_mean' of the given dataset. The reason we should impute differently accross the different diagnosis group is because it is expected that the given predictor/variable will have different distribution for different categories of diagnosis(be it Benign or Malignant)
+```{r}
+data_modified$diagnosis<-as.factor(data_modified$diagnosis)
+```
+
+```{r}
+#Applying mean imputation by groups
+categories<-unique(data_modified$diagnosis)
+```
+```{r}
+impute_fun<-function(df, x){
+  a1<-df %>%filter(diagnosis == x) 
+  a1$texture_mean[which(is.na(a1$texture_mean))]<-mean(a1$texture_mean, na.rm= T)
+  return(a1)
+}
+```
+```{r}
+a4<-lapply(categories, function(x)impute_fun(data_modified, x))
+
+```
+```{r}
+row_count<-sapply(a4, nrow)
+```
+```{r}
+data_final<-do.call(rbind,a4)
+```
+```{r}
+data_final<-arrange(data_final, Index)
+```
+5. After imputation, use "ggplot" and "facet_wrap" to plot a grid of 10 x 3 histograms to explore the data shape and distribution of all the independent variables in this dataset. The dataset has 10 sets of independent variables not counting age, and each set consists of the mean, standard error and worst value of a particular cell measurement. "Area" and "concavity" are cell measurements. For example, "area_se" is the standard error of area measurements from a particular patient in this study. When you plot, remember to select a reasonable number of bins and add legends and labels when appropriate. Adjust the size of the plot display so that you can see all the facets clearly when you knit. 
+
+```{r, fig.width = 10, fig.height = 20}
+ggplot(gather(data_final[, 3:32]), aes(x=value))+geom_histogram(bins = 20)+labs(x = "Values", y ="Frequency", title="Histograms")+theme(plot.title = element_text(hjust = 0.5))+facet_wrap(~key, scale = 'free_x', ncol=3)
+  #ggplot(aes(val, fill = what)) + geom_histogram() + facet_wrap(c(3:32))
+```
+
+6. If you observe the independent variable distributions closely, groups of variables that start with "area" and "concavity" are consistently strongly skewed to the right. Apply log transform using the same formula we used in the last HW to these 6 variables. 
+```{r}
+df_final<-mutate_at(data_final, vars(contains("area")|contains("concavity")), function(x)log(x+1))
+```
+Gather the above data set for plotting the histogram
+```{r, fig.width = 10, fig.height = 20}
+ggplot(gather(df_final[, 3:32]), aes(value))+geom_histogram(bins = 20)+labs(x = "Values", y="Frequency", title="Histograms")+theme(plot.title = element_text(hjust = 0.5))+facet_wrap(~key, scale = 'free_x', ncol=3)
+```
+
+7. The pre-processed dataset needs to be scaled before performing PCA. Can you give a brief explanation on why that is the case? Standardize the dataset. Use summary() again to show that your dataset has been properly standardized.
+
+## PCA
+Answer 7.
+The pre-processed dataset need to be scaled before performing PCA. This is so that the PCA projects the original data into mutually independent/orthogonal directions in order to maximise thhe variance in each variable. So a proper scaling results in similar mean values for all the variable(which is zero in this case) and hence the variable projection is only dependent on the difference in variance/standard deviation.
+It also takes care of differences in units/magnitude of different types of variables.  
+```{r}
+if(!("robustHD" %in% installed.packages()))
+install.packages("robustHD")
+library("robustHD")
+```
+
+
+
+```{r}
+for(i in c(3:32))
+df_final[,i]<-standardize(df_final[, i], centerFun = mean, scaleFun = sd)
+```
+```{r}
+summary(df_final)
+```
+We can notice that the mean value is zero for all the above variables and hence see that the normalisation has been applied properly.
+
+8. Calculate principal components using function princomp() and print the summary of the results.
+Answer 8. Applying the principal component analysis to the quantitative predictors/variables i.e. from 3:32
+```{r}
+result_pca<-princomp(df_final[, c(3:32)], cor = TRUE)#You can also use the prcomp function instead of princomp with cor=TRUE
+
+```
+```{r}
+summary_pca<-summary(result_pca)
+```
+```{r}
+summary(result_pca)
+```
+
+
+9.  Plot a scree plot using the screeplot() function.
+```{r}
+screeplot(result_pca)
+
+```
+10. Plot the following two plots and use patchwork/gridExtra to position the two plots side by side:
+a. proportion of variance explained over the number of principal components
+```{r}
+car_var<-paste("pc", c(1:30), sep = '')
+df_pca<-data.frame(PC_comp = car_var, sdev = result_pca$sdev)
+df_pca<-mutate(df_pca,var = (sdev)^2)
+```
+```{r}
+a = sum(df_pca$var)
+df_pca<-mutate(df_pca,var_prop = var/a)
+```
+
+
+b. cumulative proportion of variance explained plot over the number of principal components; draw horizontal lines at 88% of variance and 95% variance.
+```{r}
+a = sum(df_pca$var)
+df_pca$cum_var<-cumsum(df_pca$var_prop)
+```
+
+```{r}
+p1<-df_pca[c(1:20), ]%>%
+  ggplot(aes(x = reorder(PC_comp, -var_prop), y = var_prop))+geom_col()+labs(x = "Principal Components", y = "Proportional Variance", title ="Proportion of Variance(First 20 PC)")+theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+p2<-df_pca[c(1:20), ]%>%
+  ggplot(aes(x = 1:20, y = cum_var))+geom_point()+geom_line()+scale_x_discrete(limits=c(1:20), labels=paste("pc", c(1:20), sep=""))+geom_hline(yintercept=0.88, linetype = "dashed", color ="red")+geom_hline(yintercept=0.95, linetype = "dashed", color="green")+labs(x = "Principal Components", y = "Cumalative Variance", title ="Cumulative Variance(First 20 PC)")+theme(plot.title = element_text(hjust = 0.5))
+```
+```{r fig.height=6, fig.width=15}
+grid.arrange(p1, p2, ncol=2, top="Variance")
+```
+
+Note: please remember to clearly label your plots with titles, axis labels and legends when appropriate.
+
+11. What proportions of variance are captured from the first, second and third principal components? How many principal components do you need to describe at least 88% and 95% of the variance, respectively?
+```{r}
+df_pca$var_prop[c(1:3)]*100
+```
+Answer 11.: 44.7%, 19.2%, 9.3% proportion of variance captured from the first, second and third components. 6 principal components are needed to capture 88% variance and 10 principal components are needed to capture 95% of variance.
+
+
+12. Which are the top 3 variables that contribute the most to the variance captured from PC1, PC2 and PC3 respectively? (hint: look at the loadings information)
+```{r}
+pc_final_1<-data.frame(load = result_pca$loadings[,1])%>%arrange(desc(load))
+head(pc_final_1)
+```
+Answer 12. The variables concave points_mean , concavity_mean, concave points_worst contribute most to the variance captured from PC1, PC2 and PC3.
+14. Because of the relatively large number of variables in this dataset, it's very difficult to see the biplot clearly. Use the autoplot() function in package "ggfortify" to display a clearer biplot overlaid with a scatter plot for the first 2 principal components.
+```{r}
+biplot(result_pca, choices = 1:2)
+```
+```{r}
+autoplot(result_pca, data = df_final, x=1, y = 2, geom='point', colour = 'diagnosis')+labs(title = "Principal component analysis using PCA between PC1 and PC2")+  theme(plot.title = element_text(hjust = 0.5))
+```
+15. Plot a grid of 3 x 2 scatter plots, where each plot is a scatter plot between two of the first 4 principal components, with different colors for each diagnosis group. For example, in grid cell (1,1), you should plot a scatter plot where the x-axis is PC1 and y-axis is PC2 where observations are colored according to the diagnosis group. Remember to adjust the plot display size so that you can see it clearly. Add legends and labels when appropriate. What are your observations?
+```{r}
+
+pca12<-autoplot(result_pca, data = df_final, x=1, y = 2, geom='point', colour = 'diagnosis')+labs(title = "Principal component analysis using PCA between PC1 and PC2")+  theme(plot.title = element_text(hjust = 0.5))
+pca13<-autoplot(result_pca, data = df_final, x=1, y = 3, geom='point', colour = 'diagnosis')+labs(title = "Principal component analysis using PCA between PC1 and PC3")+  theme(plot.title = element_text(hjust = 0.5))
+pca14<-autoplot(result_pca, data = df_final, x=1, y = 4, geom='point', colour = 'diagnosis')+labs(title = "Principal component analysis using PCA between PC1 and PC4")+  theme(plot.title = element_text(hjust = 0.5))
+pca23<-autoplot(result_pca, data = df_final, x=2, y = 3, geom='point', colour = 'diagnosis')+labs(title = "Principal component analysis using PCA between PC2 and PC3")+  theme(plot.title = element_text(hjust = 0.5))
+pca24<-autoplot(result_pca, data = df_final, x=2, y = 4, geom='point', colour = 'diagnosis')+labs(title = "Principal component analysis using PCA between PC2 and PC4")+  theme(plot.title = element_text(hjust = 0.5))
+pca34<-autoplot(result_pca, data = df_final, x=3, y = 4, geom='point', colour = 'diagnosis')+labs(title = "Principal component analysis using PCA between PC3 and PC4")+  theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+library(gridExtra)
+```
+```{r  fig.width=20, fig.height = 15}
+grid.arrange(pca12,pca13,pca14,pca23, pca24, pca34, ncol=2, nrow=3, top = "PCA Analysis of various components")
+```
+Answer 15. We can clearly see that for the plots lagging component 1 the two classes overlap with each other and do not seperate well. This may be because the first component captures 44% of variance in the data and is neccessary to obtain distinction between two kinds of diagnosis.
+We see that most of the variance along the captured along the first principal component divides both the groups/classes at PC_1 = 0(i.e. x = 0)
+## Hierarchical Clustering
+
+17. Calculate a dissimilarity matrix using Euclidean distance and compute hierarchical clustering using the complete linkage method and plot the dendrogram. Use the rect.hclust() function to display dividing the dendrogram into 4 branches. 
+```{r}
+library("cluster")
+df.dissimilarity<-daisy(df_final[, c(3:32)], metric ="euclidean")
+```
+
+```{r}
+df.cluster.complete<-hclust(df.dissimilarity, method = "complete")
+```
+```{r}
+plot(df.cluster.complete)
+```
+
+18. Divide the dendrogram into 4 clusters using cutree() function. Then use table() function and the diagnosis label information to compare the composition (benign vs. malignant) of each of the 4 clusters. How would you label each of these four clusters (e.g. cluster 1 is benign or malignant, cluster 2 is …, etc.)?
+```{r}
+df.cluster.4<-cutree(df.cluster.complete,k = 4, h=1)
+```
+```{r}
+table(df.cluster.4)
+```
+```{r}
+df.cluster.4.diagnosis<-data.frame(Diagnosis = df_final$diagnosis, Cluster = df.cluster.4)
+table(df.cluster.4.diagnosis)
+```
+Answer 18. If you want to clasify each cluster you can go with the class number maximum in that particular cluster. So, Cluster 1 is Malignant Cluster 2 is Malignant, Cluster 3 is benign and cluster 4 is benign. Here 38 Benign out of total 357 Benign have been misclassified(10.7%). And 29 Malignant out of total 212 (13.7%) have been misclassified.  Therefore total 67/569 i.e. 11.67% of the total have been misclassified.
+19. Now try 6 clusters with and plot dendrograms for hierarchical clustering using Ward’s linkage. Use table() function to view the clustering result. How would you label each of these 6 clusters? Does this clustering work better or worse than the clustering result in the previous question? Give brief explanations.
+```{r}
+df.cluster.ward<-hclust(df.dissimilarity, method = "ward.D")
+df.cluster.ward.6 <-cutree(df.cluster.ward,k = 6)
+table(df.cluster.ward.6)
+plot(df.cluster.ward)
+```
+```{r}
+df.cluster.6.diagnosis<-data.frame(Diagnosis = df_final$diagnosis, Cluster = df.cluster.ward.6)
+table(df.cluster.6.diagnosis)
+```
+Answer 19. Going by the maximum count in a particular cluster. Cluster 1 belongs to Malignant, Cluster 2 belongs to Malignant. Cluster 3 can be classified as Bbenign, although the class of benign exceeds the malignant class by only few numbers. Cluster 4 is Benign, Cluster 5 is Benign and Cluster 6 is Benign.  Here 55 Benign out of total 357 (15%) and 5 malignant out of total 212(2.3%) i.e. 60 out of total 569 (10.5%) have been missclassified. When compared to the 4 cluster groups, the misclassification rate is lower in 6 cluster groups, but the problem with six cluster groups is that the group 3 can't be put into any either malignant or benign. Since it includes both of them roughly equal.
+
+## K-Means Clustering
+
+20. Compute k-means clustering on this dataset using the kmeans() function for two clusters. Then use the table() function and the diagnosis label information to compare the composition (benign vs. malignant) of each of the 2 clusters (hint: the cluster information from k-means is stored in the $cluster attribute in the k-means result.)
+```{r}
+kc<-kmeans(df_final[, 3:32], 2)
+```
+
+```{r}
+df_kmeans_plot<-data.frame(Diagnosis = df_final$diagnosis, Cluster = kc$cluster)
+```
+```{r}
+table(df_kmeans_plot)
+```
+
+21. Visualize the clusters using the fviz_cluster() function from the factoextra package.
+```{r}
+
+library("factoextra")
+fviz_cluster(kc, data = df_final[, 3:32])
+```
+
+22. Between the 3 clustering models we have tried in this homework, which one does the best? What's your observation?
+## **For PCA cluster the Classificaltion result are**
+```{r}
+df_pca_comp = data.frame(PCA_Cluster = as.numeric(as.logical((pca12$data$Comp.1)<0)),Diagnosis = df_final$diagnosis )
+table(df_pca_comp$Diagnosis, df_pca_comp$PCA_Cluster)
+```
+Misclassified B:29/357(8.12%); M:20/212(9.4%); total:49/569(8.7%)
+## **For Hiearchial Clustering the results are:**
+```{r}
+df.cluster.4.diagnosis<-data.frame(Diagnosis = df_final$diagnosis, Cluster = df.cluster.4)
+table(df.cluster.4.diagnosis)
+```
+Misclassified(4 cluster): B:38/357(10.7%); M:29/ 212 (13.7%),total 67/569(11.67% )
+Misclassified(6 cluster): B:55/357(15%); M:5/ 212 (2.35%),total 60/569(10.5% )
+## **For K-means the results are**
+
+```{r}
+table(df_kmeans_plot)
+```
+Misclassified: B:33/357(9.2%); 11/ 212 (5.88%),total 44/569(7.8% )
+
+Based on Misclassification rate we can see that the K-Means clustering performs best followed by the, PCA Classification followed by the Hiearchial Clustering.

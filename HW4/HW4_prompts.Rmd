@@ -1,0 +1,214 @@
+---
+title: "YYYYMMDD_lastname_firstname_HW4"
+author: Your Name
+date: HW4 Completion Date
+output: html_document
+---
+
+# BME 590 Homework 4
+
+---
+
+*In this homework, the objectives are to*
+
+1. Implement a k-Nearest Neighbors Classifier on a real world dataset
+
+2. Implement cross validation with k-Nearest Neighbors Classifier
+
+3. Implement a logistic regression classifier on a real world dataset
+
+4. Implement a linear discriminant analysis classifier on a real world dataset
+
+Assignments will only be accepted in electronic format in RMarkdown (.rmd) files and knitted .html files. **5 points will be deducted for every assignment submission that does not include either the RMarkdown file or the knitted html file.** Your code should be adequately commented to clearly explain the steps you used to produce the analyses. RMarkdown homework files should be uploaded to Sakai with the naming convention date_lastname_firstname_HW[X].Rmd. For example, my first homework assignment would be named 20200911_Dunn_Jessilyn_HW1.Rmd. **It is important to note that 5 points will be deducted for every assignment that is named improperly.** Please add your answer to each question directly after the question prompt in  the homework .Rmd file template provided below.
+
+```{r message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(patchwork)
+library(gridExtra)
+library(psych)
+library(corrplot)
+library(ggfortify)
+library(factoextra)
+library(class) #knn
+library(gmodels) # CrossTable()
+library(caret) # creatFolds()
+library(caTools) #sample.split()
+library(ROCR) # prediction(), performance()
+set.seed(123)
+```
+
+## Dataset
+Diabetic retinopathy
+https://archive.ics.uci.edu/ml/datasets/Diabetic+Retinopathy+Debrecen+Data+Set
+
+**Terminologies: **
+
+Diabetic retinopathy:  is a diabetes complication that affects eyes. It's caused by damage to the blood vessels of the light-sensitive tissue at the back of the eye (retina). At first, diabetic retinopathy may cause no symptoms or only mild vision problems.
+
+Microaneurysms (MA): Microaneurysms are the earliest clinically visible changes of diabetic retinopathy. They are localised capillary dilatations which are usually saccular (round). They appear as small red dots which are often in clusters, but may occur in isolation. They do not affect vision and they are one.
+
+Exudate: a mass of cells and fluid that has seeped out of blood vessels or an organ, especially in inflammation.
+
+Macula: The macula is the central area of the retina and is of particular interest to retina specialists. Remember, that the retina is the light sensitive tissue which lines the inside of the eye. The macula is the functional center of the retina. It gives us the ability to see “20/20” and provides the best color vision.
+
+Optic Disc: The optic disc or optic nerve head is the point of exit for ganglion cell axons leaving the eye. Because there are no rods or cones overlying the optic disc, it corresponds to a small blind spot in each eye. The ganglion cell axons form the optic nerve after they leave the eye.
+
+---
+
+## Data Visualization and Preprocessing
+1. Load the CSV file titled "HW4_dataset.csv" and print the first 10 rows using head() function. How many rows are there in this dataset?
+```{r}
+data<-read.csv2(file = "HW4_dataset.csv", sep=',')
+```
+```{r}
+dim(data)
+```
+There are 1151 rows and 8 variables in the dataset.
+
+
+2. The following are explanations of the columns included in this dataset:
+ 
+acceptable_quality: whether this observation has acceptable quality; 1 = acceptable; 0 = not acceptable
+
+ma_detection_0.5: detected macula area at 0.5 confidence
+
+ma_detection_1.0: detected macula area at 1.0 confidence
+
+exudates_0.5: detected exudates at 0.5 confidence, normalized by dividing the
+number of lesions with the diameter of the ROI to compensate different image
+sizes
+
+exudates_1.0: detected exudates at 1.0 confidence, normalized by dividing the
+number of lesions with the diameter of the ROI to compensate different image
+sizes
+ 
+macula_dist: the euclidean distance of the center of the macula and the center of the optic disc to provide important information regarding the patient's condition, normalized with the diameter of the ROI.
+  
+optic_disc_diameter: the diameter of the optic disc
+  
+label/dependent variable: 1 = contains signs of Diabetic Retinopathy (DR); 0 = no signs of DR
+
+Filter and save a new dataframe that contains only acceptable observations and then delete the acceptable_quality column. How many rows are left? 
+
+```{r}
+data_filter<- data%>%
+  filter(acceptable_quality==1)
+```
+```{r}
+nrow(data_filter)
+```
+
+3. Use scale() to standardize the independent variables in this dataset. Structure a new dataframe that has all the standardized independent variables as well as the binary label column. Hint: you can use as_tibble() function to nicely format the standardized columns into a dataframe.
+The independent variables are ma_detection_0.5, ma_detection_1.0, exudate_0.5, exudate_1.0, macula_distance, optic_disc_diameter.So standardizing it
+```{r}
+library(robustHD)
+```
+```{r}
+data_temp<-data_filter%>%
+  select(ma_detection_0.5, ma_detection_1.0, exudates_0.5, exudates_1.0, macula_distance, optic_disc_diameter)
+
+```
+
+```{r}
+for(i in c(1:6))
+{
+  data_temp[[i]]<-standardize(as.numeric(data_temp[[i]]))
+}
+
+```
+
+
+4. Use facet_wrap and ggplot like in the last HW to visualize all 6 independent variables.
+```{r}
+```
+
+5. For simplicity, we will arbitrarily split our dataset into an 80:20 ratio for the training and testing datasets, respectively. Split your normalized dataset into two separate data frames – i.e. first 80% of the rows for training and the rest 20% for testing. Name your dataframes appropriately (e.g. df_train and df_test). Then define two data frames, X_train and X_test, containing only the independent variables for either the training or the test data. Define two vectors,y_train and y_test containing only the labels for either the training or the test data.
+
+---
+
+## kNN
+6. Generate a KNN model using the knn() function. Usek = sqrt(# observations in the training set).
+- Learn the syntax of knn() from https://www.rdocumentation.org/packages/class/versions/7.3-
+15/topics/knn.
+- Note: The dependent variable that you aim to predict should not be included in the training and test data frames that you pass along to knn().
+- Note: The labels for the training dataset should be passed separately. Recall that we designed two new vectors for this purpose: y_train and y_test 
+- It should be clear to you that the output of knn() is a list of the predicted values for the test set you passed.
+
+7. A confusion matrix demonstrates the number of true and false positives, and true and false negatives, that our model predicts. The confusion matrix displays this in a table so that we can clearly see where the model performs well and where it fails to make the correct prediction. Create a confusion matrix using the CrossTable() function from the package gmodels.
+- Set prop.chisq = FALSE so that chi-squared contribution from each cell is ignored. Only the minimum amount of information is needed to answer this question.
+- Learn the syntax of the CrossTable() function from
+https://www.rdocumentation.org/packages/gmodels/versions/2.18.1/topics/CrossTable
+
+8. How many false positives are there (hint:  here, a positive call means that the image contains signs of Diabetic Retinopathy)? Using the definitions that we learned in class, calculate and print accuracy, sensitivity, error rate, and precision. You may choose either to use the information from the printed confusion matrix or to calculate using the equations from lecture slides. However, make sure you show your code, print out the results of the commands, and annotate your code clearly for full credit.
+
+---
+
+# K-fold cross validation with kNN, where K and k have different meanings
+
+9. In the previous kNN model, we divided up our data into 80% training and 20% test. We built the model on the 80% of the training data and tested how well the kNN model performed on the 20% of the test data. Another way that we can evaluate our model, besides holding out 20% of the data for testing, is to use a cross-validation method. Recall from class the K-fold cross validation strategy.
+
+Now let’s  try out  K-fold cross validation using K=5 (arbitrarily chosen here). Use createFolds() from the “gmodels” package to divide our standardized dataset (that we generated in question 3) into 5 groups (called “folds”). Print the number of observations that each of the 5 folds contains. Are the number of observations the same in every fold? Why or why not?
+- Note: There are two “k” values here: one for kNN and the other for K-fold CV. They mean different things. In this HW, we designate K (upper case) to be the number of folds in K-fold cross-validation and k (lower case) to be the number of similar observations to be included in k-nearest neighbors model.
+- This can be very confusing! Recall that we also learned another method called K-means clustering. Why is the letter K used so often in ML? We don’t know, but you can find out and tell us for a bonus point!
+- Note: The createFolds() function samples observations from the dataset randomly. The set.seed function ensures that randomly generated numbers are the same each time so that your answers are consistent. This allows for greater reproducibility, avoiding unnecessary randomness. set.seed(123) is included when loading the packages. The number 123 is selected arbitrarily.
+
+10. Now, we are going to build a knn model again with the more robust cross-validation method to evaluate its output. Train five kNN models using k = 33 neighbors for each of the K= 5 CV folds and compute the error rates of each kNN model on the held-out test data for each fold. The error rate is the number of observations that are classified incorrectly divided by the total number of predictions made. Print the average of the 5 error rates. 
+
+11. Plot error rates vs. k values (from knn) for all odd numbers between 1 and 55 (i.e. 1, 3, 5, ..., 53, 55) using the methods we used in question 10. Which k value gives the minimum average error rate when you perform 5-fold cross validation? Explain what may have caused your initial kNN models from Question 10 to have high error rates and how k-Fold Cross Validation has improved the accuracy rate of your kNN models.
+
+---
+
+## Logistic Regression
+12. Now, we will try out another prediction algorithm: logistic regression. We will go back to our initial evaluation schema of randomly sampling 80% of our dataset for training and 20% of our dataset for testing.Now, we will use convenient tools from the caTools package instead of manually defining the testing and training split as we did in question 5. Run the code below to prepare the  training and testing datasets. 
+- Note: SplitRatio is set to 0.8 to make the training set comprise 80% of the original data
+
+```{r eval=FALSE}
+sample <- sample.split(standardized_df$label,SplitRatio = 0.8)
+train_df <- subset(standardized_df,sample ==TRUE)
+test_df <- subset(standardized_df, sample==FALSE)
+```
+
+
+13. Run logistic regression on the training data from Question 12 above using glm(), whose name abbreviates “generalized linear models”.
+- For the glm() package  syntax, see https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/glm. Note the second reference for this package- this is one of the authors of your Intro to Stat Learning book!
+- Note: You should set family = binomial to let glm() know that you want to run logistic
+regression.
+
+14. Print summary() of your trained logistic regression model. How many of the independent variables are significant in this model?
+
+- Note: The number of asterisks in the last column of the Coefficients table shows the significance level. See the“Signif. codes" section underneath the table which shows which p-value each set of asterisks corresponds to.
+
+15. Test your model using the test set from Question 12 above using the predict() function.
+- Learn the syntax of the predict() function by reading https://stat.ethz.ch/R-manual/R-devel/library/stats/html/predict.lm.html.
+- Note: You should set type = “response” to let predict() know that you want to test the
+model’s predictive power with your test dataset.
+- Note: The predict() function will output probabilities P(y = 1 | X). That is, its output will list the probability  that each subject is positively diagnosed with diabetic retinopathy based on the trained model and the values of their independent variables.
+- Typically, we assume that if this probability is > 0.5, then the predicted label is “positively diagnosed”. Otherwise, we  classify the patient to have  “no disease”. This means that you will transform the output from predict() into binary values [0,1], which we will later compare to the observed labels to calculate accuracy and error rates.
+
+16. Calculate and print the accuracy and error rate of your trained logistic regression model.
+
+17. Plot a receiver operating characteristic (ROC) curve using the prediction() and performance() functions from the ROCR package. Calculate and print the area under the ROC curve using the function performance().
+- For more information, see https://www.r-bloggers.com/a-small-introduction-to-the-rocr-package/
+
+---
+
+## Linear Discriminant Analysis
+
+```{r}
+library(MASS)
+```
+
+
+18. Train a linear discriminant analysis (LDA) model on the training dataset using the lda() function from the MASS package.
+- For more information, please refer to https://www.rdocumentation.org/packages/MASS/versions/7.3-53/topics/lda
+
+19. Evaluate the LDA model by plotting the ROC curve using prediction() and performance() from the ROCR package. Calculate and print the area under the ROC curve using performance().
+
+---
+
+## Conclusion
+20. Among the models we have used for this dataset in this HW, which works the best and why? Briefly explain your reasoning taking into consideration the accuracy and ROC-AUC metrics.
+
+

@@ -1,0 +1,43 @@
+---
+title: "CHD_smoking"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+CHD <- c(4,15,19,21,26,11,18,6)
+S <- c(3, 5, 8, 9, 11, 4, 5, 4)
+ID <- c(1,2,3,4,5,6,7, 8)
+Age <- c(25, 34, 56, 60, 55, 30, 34, 26)
+Fat <- c(25, 34, 40, 50, 51, 26, 34, 8)
+Exercise <- c(30, 25, 5, 5, 8, 26, 10, 32)
+
+```
+
+```{r}
+df = data.frame(ID, CHD, S, Age, Fat, Exercise)
+pairs(df)
+library("psych")
+pairs.panels(df)
+```
+
+```{r}
+plot(df$S, df$CHD, xlab = "Average number of cigarettes per adult per day", ylab="Coronary heart disease mortality per 10K adults")
+abline(lm(data = df, CHD~S), col = "red")
+
+```
+```{r}
+model <-lm(data = df, CHD~S)
+model
+```
+```{r}
+summary(model)
+```
+```{r}
+full.model <-lm(data = df, CHD~Age+Exercise)
+summary(full.model)
+```
